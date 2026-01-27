@@ -15,45 +15,135 @@ We present **The Carbon Cost of Generative AI for Science**, a benchmarking fram
 
 ## Tasks
 
-| Task | Status |
-|------|--------|
-| Retrosynthesis | In Progress |
-| Molecule Generation | Planned |
-| Material Generation | Planned |
+| Task | Branch | Status |
+|------|--------|--------|
+| Retrosynthesis | `retrosynthesis` | In Progress |
+| Molecule Generation | `molecule_generation` | Planned |
+| Material Generation | `material_generation` | Planned |
 
-## Quick Start
+---
+
+## Getting Started
+
+### Step 1: Clone the Repository
 
 ```bash
+# Clone main branch (benchmark infrastructure only)
 git clone https://github.com/shuan4638/Carbon4Science.git
 cd Carbon4Science
-pip install codecarbon pandas numpy
+
+# For retrosynthesis models, switch to that branch
+git checkout retrosynthesis
 ```
 
-### Carbon Tracking
+### Step 2: Setup Environments
 
-```python
-from benchmarks.carbon_tracker import CarbonTracker
+**Important**: Each model requires a different conda environment due to incompatible dependencies.
 
-tracker = CarbonTracker(project_name="my_experiment")
+```bash
+cd benchmarks
 
-with tracker:
-    # Your model training or inference
-    results = model.predict(test_data)
+# Setup ALL environments (recommended, takes ~30 min)
+chmod +x setup_envs.sh
+./setup_envs.sh
 
-metrics = tracker.get_metrics()
-print(f"Energy: {metrics['energy_kwh']:.4f} kWh")
-print(f"CO2: {metrics['emissions_kg_co2']:.4f} kg")
+# OR setup a specific model's environment
+./setup_envs.sh neuralsym
+./setup_envs.sh LocalRetro
 ```
+
+### Step 3: Download Model Checkpoints
+
+```bash
+# RetroBridge
+mkdir -p Retrosynthesis/RetroBridge/models
+wget https://zenodo.org/record/10688201/files/retrobridge.ckpt \
+     -O Retrosynthesis/RetroBridge/models/retrobridge.ckpt
+
+# See benchmarks/configs/models.yaml for all checkpoint URLs
+```
+
+### Step 4: Run Benchmarks
+
+```bash
+cd benchmarks
+
+# Run a single model (auto-switches conda environment)
+./run.sh --model neuralsym --smiles "CCO" --device cuda:0
+
+# Run with carbon tracking
+./run.sh --model LocalRetro --smiles "CCO" --track_carbon
+
+# Run with evaluation metrics
+./run.sh --model neuralsym \
+    --input ../data/test.csv \
+    --ground_truth ../data/test_reactants.csv \
+    --metric top_1 top_10 \
+    --track_carbon \
+    --output results/neuralsym_results.json
+
+# Run ALL models for comparison
+./run.sh --model all --input ../data/test.csv --track_carbon
+```
+
+---
 
 ## Repository Structure
 
 ```
 Carbon4Science/
-├── benchmarks/          # Carbon measurement infrastructure
-├── Retrosynthesis/      # Retrosynthesis models (separate branch)
-├── MolGen/              # Molecule generation (planned)
-└── MatGen/              # Material generation (planned)
+├── README.md                 # This file
+├── CONTRIBUTING.md           # How to contribute
+├── LICENSE                   # MIT License
+│
+├── benchmarks/               # Benchmark infrastructure (main branch)
+│   ├── run.sh               # Unified runner (handles conda envs)
+│   ├── setup_envs.sh        # Environment setup script
+│   ├── run_benchmark.py     # Python benchmark script
+│   ├── carbon_tracker.py    # Carbon measurement module
+│   ├── configs/
+│   │   ├── models.yaml      # Model checkpoints & requirements
+│   │   └── hardware_template.yaml
+│   └── results/             # Benchmark outputs
+│
+├── Retrosynthesis/          # (retrosynthesis branch only)
+│   ├── neuralsym/
+│   ├── LocalRetro/
+│   ├── RetroBridge/
+│   ├── Chemformer/
+│   └── RSGPT/
+│
+├── MolGen/                  # (molecule_generation branch)
+└── MatGen/                  # (material_generation branch)
 ```
+
+---
+
+## For Contributors
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
+- Adding new models
+- Running benchmarks
+- Submitting results
+
+### Quick Reference: Uniform Model Interface
+
+All models must implement this interface in `Inference.py`:
+
+```python
+def run(smiles, top_k=10) -> List[Dict]:
+    """
+    Args:
+        smiles: str or List[str] - Input SMILES
+        top_k: int - Number of predictions
+
+    Returns:
+        List[Dict] with format:
+        [{'input': 'CCO', 'predictions': [{'smiles': '...', 'score': 0.95}, ...]}]
+    """
+```
+
+---
 
 ## Citation
 
