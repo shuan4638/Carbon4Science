@@ -20,13 +20,14 @@ wheels/
 .installed.cfg
 *.egg
 
-# Virtual environments
-venv/
-ENV/
-env/
-.venv/
-*_env/
-param_eval_env/
+# Virtual environments (match anywhere in tree)
+**/venv/
+**/ENV/
+**/env/
+**/.venv/
+**/*_env/
+**/param_eval_env/
+**/.poetry/
 
 # Jupyter
 .ipynb_checkpoints/
@@ -49,6 +50,11 @@ Thumbs.db
 *.pt
 *.bin
 *.safetensors
+**/checkpoint/
+**/checkpoints/
+**/models/*.ckpt
+**/models/*.pth
+**/weights/
 
 # Data files (large)
 *.npz
