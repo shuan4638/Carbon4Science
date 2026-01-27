@@ -2,6 +2,93 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## Rules for Claude Code
+
+### Rule 1: Uniform Inference Interface
+
+When creating or modifying any `Inference.py` file, ALWAYS use this exact interface:
+
+```python
+from typing import List, Dict, Union
+
+def run(smiles: Union[str, List[str]], top_k: int = 10) -> List[Dict]:
+    """
+    Returns:
+        [{'input': 'CCO', 'predictions': [{'smiles': '...', 'score': 0.95}, ...]}]
+    """
+```
+
+**NEVER** deviate from this return format. The benchmark runner depends on it.
+
+### Rule 2: Environment Isolation
+
+Each model has its own conda environment. **NEVER** suggest installing packages globally or mixing environments.
+
+| Model | Environment Name |
+|-------|-----------------|
+| neuralsym | `neuralsym` |
+| LocalRetro | `rdenv` |
+| RetroBridge | `retrobridge` |
+| Chemformer | `chemformer` |
+| RSGPT | `gpt` |
+
+When running models, use: `./benchmarks/run.sh --model <name>` (handles env switching automatically)
+
+### Rule 3: Benchmark Runner
+
+**ALWAYS** use the wrapper scripts instead of running Python directly:
+
+```bash
+# Correct
+./benchmarks/run.sh --model neuralsym --smiles "CCO"
+
+# Wrong - will fail due to environment issues
+python benchmarks/run_benchmark.py --model neuralsym --smiles "CCO"
+```
+
+### Rule 4: Adding New Models
+
+When adding a new model, you MUST update ALL of these files:
+
+1. `Retrosynthesis/NewModel/Inference.py` - Implement uniform interface
+2. `Retrosynthesis/NewModel/environment.yml` - Dependencies
+3. `benchmarks/setup_envs.sh` - Add setup function
+4. `benchmarks/run.sh` - Add to MODEL_ENVS mapping
+5. `benchmarks/run_benchmark.py` - Add to MODELS dict
+6. `benchmarks/configs/models.yaml` - Add configuration
+
+### Rule 5: Carbon Tracking
+
+When running benchmarks, ALWAYS include `--track_carbon` flag:
+
+```bash
+./benchmarks/run.sh --model LocalRetro --input data/test.csv --track_carbon
+```
+
+### Rule 6: Device Selection
+
+Always let users specify device. Default to `cuda:0` but support CPU fallback:
+
+```bash
+./benchmarks/run.sh --model neuralsym --device cuda:0  # GPU
+./benchmarks/run.sh --model neuralsym --device cpu     # CPU fallback
+```
+
+### Rule 7: No Hardcoded Paths
+
+Use relative paths from repository root. Never hardcode absolute paths in any script.
+
+### Rule 8: Standardized Metrics
+
+For retrosynthesis, always report these metrics:
+- `top_1` - Exact match accuracy
+- `top_5` - Correct in top 5
+- `top_10` - Correct in top 10
+
+---
+
 ## Project Overview
 
 **Carbon** is the official repository for the research paper *"The Carbon Cost of Generative AI for Science"* - a benchmarking framework that systematically evaluates both predictive performance AND carbon efficiency of generative AI models for scientific discovery.
