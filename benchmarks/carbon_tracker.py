@@ -1,9 +1,11 @@
 """
-Unified Carbon Tracking Module for The Carbon Cost of Generative AI for Science.
+Carbon Tracking Module for The Carbon Cost of Generative AI for Science.
 
 This module provides a consistent interface for measuring energy consumption and
-carbon emissions across all models in the benchmark. It wraps CodeCarbon with
-fallback to manual timing when CodeCarbon is unavailable.
+carbon emissions. It wraps CodeCarbon with fallback to manual timing.
+
+Note: Task-specific metrics (accuracy, etc.) are handled by each task's evaluate.py.
+This module focuses solely on carbon/energy measurement.
 
 Usage:
     from benchmarks.carbon_tracker import CarbonTracker
@@ -118,8 +120,8 @@ class HardwareInfo:
 
 
 @dataclass
-class BenchmarkMetrics:
-    """Metrics collected during a benchmark run."""
+class CarbonMetrics:
+    """Carbon and energy metrics collected during a benchmark run."""
     # Timing
     start_time: str = ""
     end_time: str = ""
@@ -129,17 +131,10 @@ class BenchmarkMetrics:
     energy_kwh: float = 0.0
     emissions_kg_co2: float = 0.0
 
-    # Optional detailed metrics
+    # Detailed energy breakdown
     gpu_energy_kwh: float = 0.0
     cpu_energy_kwh: float = 0.0
     ram_energy_kwh: float = 0.0
-
-    # Task-specific metrics (filled by user)
-    accuracy_top1: Optional[float] = None
-    accuracy_top5: Optional[float] = None
-    accuracy_top10: Optional[float] = None
-    num_samples: Optional[int] = None
-    batch_size: Optional[int] = None
 
     # Metadata
     project_name: str = ""
@@ -150,7 +145,7 @@ class BenchmarkMetrics:
 
 class CarbonTracker:
     """
-    Unified carbon tracking wrapper.
+    Carbon tracking wrapper for measuring energy consumption and CO2 emissions.
 
     Supports CodeCarbon for detailed tracking with fallback to manual timing.
 
@@ -160,7 +155,6 @@ class CarbonTracker:
         model_name: Name of the model being benchmarked
         task: "training" or "inference"
         save_results: Whether to automatically save results to file
-        country_iso_code: ISO code for carbon intensity (default: USA)
 
     Example:
         tracker = CarbonTracker(
@@ -172,7 +166,6 @@ class CarbonTracker:
         with tracker:
             predictions = model.predict(test_data)
 
-        tracker.add_accuracy(top1=0.455, top10=0.816, num_samples=5005)
         metrics = tracker.get_metrics()
         tracker.save()
     """
@@ -184,19 +177,17 @@ class CarbonTracker:
         model_name: str = "",
         task: str = "inference",
         save_results: bool = True,
-        country_iso_code: str = "USA"
     ):
         self.project_name = project_name
         self.output_dir = Path(output_dir)
         self.model_name = model_name
         self.task = task
         self.save_results = save_results
-        self.country_iso_code = country_iso_code
 
         self._tracker: Optional[EmissionsTracker] = None
         self._start_time: Optional[float] = None
         self._end_time: Optional[float] = None
-        self._metrics: Optional[BenchmarkMetrics] = None
+        self._metrics: Optional[CarbonMetrics] = None
         self._hardware: Optional[HardwareInfo] = None
 
         # Ensure output directory exists
@@ -218,7 +209,7 @@ class CarbonTracker:
 
         if CODECARBON_AVAILABLE:
             try:
-                # CodeCarbon 3.x API - country_iso_code removed
+                # CodeCarbon 3.x API
                 self._tracker = EmissionsTracker(
                     project_name=self.project_name,
                     output_dir=str(self.output_dir),
@@ -234,12 +225,12 @@ class CarbonTracker:
             print("Note: CodeCarbon not installed. Using manual timing only.")
             print("Install with: pip install codecarbon")
 
-    def stop(self) -> BenchmarkMetrics:
+    def stop(self) -> CarbonMetrics:
         """Stop tracking and collect metrics."""
         self._end_time = time.time()
         duration = self._end_time - self._start_time
 
-        self._metrics = BenchmarkMetrics(
+        self._metrics = CarbonMetrics(
             start_time=datetime.fromtimestamp(self._start_time).isoformat(),
             end_time=datetime.fromtimestamp(self._end_time).isoformat(),
             duration_seconds=duration,
@@ -273,34 +264,6 @@ class CarbonTracker:
 
         return self._metrics
 
-    def add_accuracy(
-        self,
-        top1: Optional[float] = None,
-        top5: Optional[float] = None,
-        top10: Optional[float] = None,
-        num_samples: Optional[int] = None,
-        batch_size: Optional[int] = None,
-        save: bool = True
-    ) -> None:
-        """Add accuracy metrics to the results and optionally re-save."""
-        if self._metrics is None:
-            raise RuntimeError("Tracker must be stopped before adding accuracy metrics")
-
-        if top1 is not None:
-            self._metrics.accuracy_top1 = top1
-        if top5 is not None:
-            self._metrics.accuracy_top5 = top5
-        if top10 is not None:
-            self._metrics.accuracy_top10 = top10
-        if num_samples is not None:
-            self._metrics.num_samples = num_samples
-        if batch_size is not None:
-            self._metrics.batch_size = batch_size
-
-        # Re-save with updated accuracy if save_results was enabled
-        if save and self.save_results:
-            self.save()
-
     def get_metrics(self) -> Dict[str, Any]:
         """Get metrics as a dictionary."""
         if self._metrics is None:
@@ -324,12 +287,12 @@ class CarbonTracker:
         return output_path
 
     def print_summary(self) -> None:
-        """Print a summary of the benchmark results."""
+        """Print a summary of the carbon metrics."""
         if self._metrics is None:
             raise RuntimeError("Tracker must be stopped before printing summary")
 
         print("\n" + "=" * 60)
-        print(f"BENCHMARK SUMMARY: {self.project_name}")
+        print(f"CARBON SUMMARY: {self.project_name}")
         print("=" * 60)
         print(f"Model:    {self.model_name or 'N/A'}")
         print(f"Task:     {self.task}")
@@ -342,16 +305,6 @@ class CarbonTracker:
             print(f"  GPU Energy:    {self._metrics.gpu_energy_kwh:.6f} kWh")
         if self._metrics.cpu_energy_kwh > 0:
             print(f"  CPU Energy:    {self._metrics.cpu_energy_kwh:.6f} kWh")
-        print("-" * 60)
-        if self._metrics.accuracy_top1 is not None:
-            print("ACCURACY:")
-            print(f"  Top-1:  {self._metrics.accuracy_top1:.2%}")
-            if self._metrics.accuracy_top5 is not None:
-                print(f"  Top-5:  {self._metrics.accuracy_top5:.2%}")
-            if self._metrics.accuracy_top10 is not None:
-                print(f"  Top-10: {self._metrics.accuracy_top10:.2%}")
-        if self._metrics.num_samples:
-            print(f"  Samples: {self._metrics.num_samples}")
         print("=" * 60 + "\n")
 
 
@@ -380,38 +333,6 @@ def aggregate_results(results_dir: str = "benchmarks/results") -> List[Dict[str,
     return results
 
 
-def create_comparison_table(results: List[Dict[str, Any]]) -> str:
-    """
-    Create a markdown comparison table from aggregated results.
-
-    Args:
-        results: List of metrics dictionaries from aggregate_results()
-
-    Returns:
-        Markdown-formatted table string
-    """
-    if not results:
-        return "No results found."
-
-    lines = [
-        "| Model | Task | Top-1 | Top-10 | Energy (kWh) | CO2 (kg) | Duration (s) |",
-        "|-------|------|-------|--------|--------------|----------|--------------|"
-    ]
-
-    for r in sorted(results, key=lambda x: x.get("model_name", "")):
-        model = r.get("model_name", "N/A")
-        task = r.get("task", "N/A")
-        top1 = f"{r['accuracy_top1']:.1%}" if r.get("accuracy_top1") else "N/A"
-        top10 = f"{r['accuracy_top10']:.1%}" if r.get("accuracy_top10") else "N/A"
-        energy = f"{r['energy_kwh']:.4f}" if r.get("energy_kwh") else "N/A"
-        co2 = f"{r['emissions_kg_co2']:.6f}" if r.get("emissions_kg_co2") else "N/A"
-        duration = f"{r['duration_seconds']:.1f}" if r.get("duration_seconds") else "N/A"
-
-        lines.append(f"| {model} | {task} | {top1} | {top10} | {energy} | {co2} | {duration} |")
-
-    return "\n".join(lines)
-
-
 if __name__ == "__main__":
     # Demo usage
     print("Carbon Tracker Demo")
@@ -429,5 +350,4 @@ if __name__ == "__main__":
         print("Running simulated workload...")
         time.sleep(2)
 
-    tracker.add_accuracy(top1=0.455, top10=0.816, num_samples=5005)
     tracker.print_summary()
