@@ -127,14 +127,18 @@ class CarbonMetrics:
     end_time: str = ""
     duration_seconds: float = 0.0
 
-    # Energy and emissions
-    energy_kwh: float = 0.0
-    emissions_kg_co2: float = 0.0
+    # Energy and emissions (Wh and g for readable precision)
+    energy_wh: float = 0.0
+    emissions_g_co2: float = 0.0
 
-    # Detailed energy breakdown
-    gpu_energy_kwh: float = 0.0
-    cpu_energy_kwh: float = 0.0
-    ram_energy_kwh: float = 0.0
+    # Detailed energy breakdown (Wh)
+    gpu_energy_wh: float = 0.0
+    cpu_energy_wh: float = 0.0
+    ram_energy_wh: float = 0.0
+
+    # Peak resource usage
+    peak_gpu_memory_mb: float = 0.0
+    peak_cpu_memory_mb: float = 0.0
 
     # Metadata
     project_name: str = ""
@@ -207,6 +211,14 @@ class CarbonTracker:
         self._start_time = time.time()
         self._hardware = HardwareInfo.auto_detect()
 
+        # Reset GPU memory tracking
+        try:
+            import torch
+            if torch.cuda.is_available():
+                torch.cuda.reset_peak_memory_stats()
+        except ImportError:
+            pass
+
         if CODECARBON_AVAILABLE:
             try:
                 # CodeCarbon 3.x API
@@ -225,15 +237,113 @@ class CarbonTracker:
             print("Note: CodeCarbon not installed. Using manual timing only.")
             print("Install with: pip install codecarbon")
 
+    @staticmethod
+    def _get_peak_gpu_memory_mb() -> float:
+        """Get peak GPU memory usage in MB."""
+        try:
+            import torch
+            if torch.cuda.is_available():
+                return torch.cuda.max_memory_allocated() / (1024 ** 2)
+        except ImportError:
+            pass
+        return 0.0
+
+    @staticmethod
+    def _get_peak_cpu_memory_mb() -> float:
+        """Get peak CPU (RSS) memory usage in MB."""
+        try:
+            import resource
+            # getrusage returns max RSS in KB on Linux
+            rusage = resource.getrusage(resource.RUSAGE_SELF)
+            return rusage.ru_maxrss / 1024  # KB -> MB
+        except Exception:
+            pass
+        return 0.0
+
+    # Default carbon intensity: US grid average ~0.4 kgCO2/kWh = 0.4 g/Wh
+    DEFAULT_CARBON_INTENSITY_G_PER_WH = 0.4
+
+    # DRAM power estimate: ~0.375 W per GB (from DDR4/DDR5 specs)
+    RAM_WATTS_PER_GB = 0.375
+
+    @staticmethod
+    def _estimate_gpu_energy_wh(duration_seconds: float) -> float:
+        """Estimate GPU energy from nvidia-smi power draw (Wh)."""
+        try:
+            result = subprocess.run(
+                ["nvidia-smi", "--query-gpu=power.draw", "--format=csv,noheader,nounits"],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                lines = result.stdout.strip().split("\n")
+                # Average power across all reporting GPUs (Watts)
+                powers = [float(p.strip()) for p in lines if p.strip()]
+                if powers:
+                    avg_power_w = sum(powers) / len(powers)
+                    return avg_power_w * duration_seconds / 3600  # W * s / 3600 = Wh
+        except Exception:
+            pass
+        return 0.0
+
+    @staticmethod
+    def _estimate_cpu_energy_wh(duration_seconds: float, cpu_cores: int = 0) -> float:
+        """Estimate CPU energy from /proc/cpuinfo TDP and system load."""
+        try:
+            # Read 1-minute load average as fraction of total cores
+            with open("/proc/loadavg") as f:
+                load_1min = float(f.read().split()[0])
+            if cpu_cores <= 0:
+                cpu_cores = os.cpu_count() or 1
+            utilization = min(load_1min / cpu_cores, 1.0)
+
+            # Estimate TDP from cpuinfo (look for known keywords)
+            # Fallback: assume 10W per core at full load (typical server CPU)
+            tdp_w = cpu_cores * 10
+            try:
+                result = subprocess.run(
+                    ["lscpu"], capture_output=True, text=True
+                )
+                if result.returncode == 0:
+                    for line in result.stdout.split("\n"):
+                        if "Thread(s) per core" in line:
+                            threads_per_core = int(line.split(":")[1].strip())
+                            physical_cores = cpu_cores // max(threads_per_core, 1)
+                            tdp_w = physical_cores * 10  # ~10W per physical core
+                            break
+            except Exception:
+                pass
+
+            # Power = TDP × utilization (idle CPUs draw ~10-20% of TDP)
+            power_w = tdp_w * max(utilization, 0.1)
+            return power_w * duration_seconds / 3600
+        except Exception:
+            pass
+        return 0.0
+
+    @staticmethod
+    def _estimate_ram_energy_wh(duration_seconds: float, peak_ram_mb: float = 0.0) -> float:
+        """Estimate RAM energy from peak memory usage."""
+        if peak_ram_mb <= 0:
+            return 0.0
+        peak_ram_gb = peak_ram_mb / 1024
+        power_w = peak_ram_gb * CarbonTracker.RAM_WATTS_PER_GB
+        return power_w * duration_seconds / 3600
+
     def stop(self) -> CarbonMetrics:
         """Stop tracking and collect metrics."""
         self._end_time = time.time()
         duration = self._end_time - self._start_time
 
+        # Collect peak memory usage
+        peak_gpu_mb = self._get_peak_gpu_memory_mb()
+        peak_cpu_mb = self._get_peak_cpu_memory_mb()
+
         self._metrics = CarbonMetrics(
             start_time=datetime.fromtimestamp(self._start_time).isoformat(),
             end_time=datetime.fromtimestamp(self._end_time).isoformat(),
             duration_seconds=duration,
+            peak_gpu_memory_mb=round(peak_gpu_mb, 1),
+            peak_cpu_memory_mb=round(peak_cpu_mb, 1),
             project_name=self.project_name,
             model_name=self.model_name,
             task=self.task,
@@ -244,20 +354,37 @@ class CarbonTracker:
             try:
                 emissions = self._tracker.stop()
                 if emissions is not None:
-                    self._metrics.emissions_kg_co2 = emissions
+                    # CodeCarbon returns kg; convert to g
+                    self._metrics.emissions_g_co2 = emissions * 1000
 
-                # Try to get detailed energy breakdown
+                # Try to get detailed energy breakdown (CodeCarbon uses kWh; convert to Wh)
                 if hasattr(self._tracker, '_total_energy'):
                     energy = self._tracker._total_energy
-                    self._metrics.energy_kwh = energy.kWh if hasattr(energy, 'kWh') else 0
+                    self._metrics.energy_wh = (energy.kWh * 1000) if hasattr(energy, 'kWh') else 0
                     if hasattr(energy, 'gpu_energy'):
-                        self._metrics.gpu_energy_kwh = energy.gpu_energy
+                        self._metrics.gpu_energy_wh = energy.gpu_energy * 1000
                     if hasattr(energy, 'cpu_energy'):
-                        self._metrics.cpu_energy_kwh = energy.cpu_energy
+                        self._metrics.cpu_energy_wh = energy.cpu_energy * 1000
                     if hasattr(energy, 'ram_energy'):
-                        self._metrics.ram_energy_kwh = energy.ram_energy
+                        self._metrics.ram_energy_wh = energy.ram_energy * 1000
             except Exception as e:
                 print(f"Warning: Error collecting CodeCarbon metrics: {e}")
+        else:
+            # Fallback: estimate energy from system sensors
+            gpu_wh = self._estimate_gpu_energy_wh(duration)
+            cpu_wh = self._estimate_cpu_energy_wh(
+                duration, self._hardware.cpu_cores if self._hardware else 0
+            )
+            ram_wh = self._estimate_ram_energy_wh(duration, peak_cpu_mb)
+            total_wh = gpu_wh + cpu_wh + ram_wh
+
+            self._metrics.gpu_energy_wh = round(gpu_wh, 4)
+            self._metrics.cpu_energy_wh = round(cpu_wh, 4)
+            self._metrics.ram_energy_wh = round(ram_wh, 4)
+            self._metrics.energy_wh = round(total_wh, 4)
+            self._metrics.emissions_g_co2 = round(
+                total_wh * self.DEFAULT_CARBON_INTENSITY_G_PER_WH, 4
+            )
 
         if self.save_results:
             self.save()
@@ -299,12 +426,18 @@ class CarbonTracker:
         print(f"Duration: {self._metrics.duration_seconds:.2f} seconds")
         print("-" * 60)
         print("ENERGY & EMISSIONS:")
-        print(f"  Total Energy:  {self._metrics.energy_kwh:.6f} kWh")
-        print(f"  CO2 Emissions: {self._metrics.emissions_kg_co2:.6f} kg")
-        if self._metrics.gpu_energy_kwh > 0:
-            print(f"  GPU Energy:    {self._metrics.gpu_energy_kwh:.6f} kWh")
-        if self._metrics.cpu_energy_kwh > 0:
-            print(f"  CPU Energy:    {self._metrics.cpu_energy_kwh:.6f} kWh")
+        print(f"  Total Energy:  {self._metrics.energy_wh:.4f} Wh")
+        print(f"  CO2 Emissions: {self._metrics.emissions_g_co2:.4f} g")
+        if self._metrics.gpu_energy_wh > 0:
+            print(f"  GPU Energy:    {self._metrics.gpu_energy_wh:.4f} Wh")
+        if self._metrics.cpu_energy_wh > 0:
+            print(f"  CPU Energy:    {self._metrics.cpu_energy_wh:.4f} Wh")
+        print("-" * 60)
+        print("PEAK RESOURCE USAGE:")
+        if self._metrics.peak_gpu_memory_mb > 0:
+            print(f"  GPU Memory:    {self._metrics.peak_gpu_memory_mb:.1f} MB")
+        if self._metrics.peak_cpu_memory_mb > 0:
+            print(f"  CPU Memory:    {self._metrics.peak_cpu_memory_mb:.1f} MB")
         print("=" * 60 + "\n")
 
 

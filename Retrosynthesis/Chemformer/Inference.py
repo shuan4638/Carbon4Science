@@ -19,10 +19,21 @@ Usage:
 from typing import List, Optional, Union
 
 import omegaconf as oc
+from rdkit import Chem
 
 import molbart.utils.data_utils as util
 from molbart.models import Chemformer
 from molbart.data import SynthesisDataModule
+
+
+def _canonicalize(smiles: str) -> str:
+    """Remove atom mapping and canonicalize SMILES."""
+    mol = Chem.MolFromSmiles(smiles)
+    if mol is None:
+        return smiles
+    for atom in mol.GetAtoms():
+        atom.SetAtomMapNum(0)
+    return Chem.MolToSmiles(mol, canonical=True)
 
 
 class ChemformerInference:
@@ -99,6 +110,9 @@ class ChemformerInference:
             smiles_list = [smiles]
         else:
             smiles_list = list(smiles)
+
+        # Remove atom mapping and canonicalize (model vocab doesn't include mapped tokens)
+        smiles_list = [_canonicalize(s) for s in smiles_list]
 
         # Set beam size
         beam_size = n_beams if n_beams is not None else self.n_beams

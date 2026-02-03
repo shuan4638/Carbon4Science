@@ -11,6 +11,7 @@ Usage:
 """
 
 import os
+import sys
 import re
 import torch
 import torch.nn.functional as F
@@ -18,13 +19,18 @@ from typing import List, Optional, Dict, Any
 from transformers import LlamaForCausalLM, LlamaConfig
 from rdkit import Chem
 
+# Add RSGPT directory to path for local imports
+_RSGPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _RSGPT_DIR not in sys.path:
+    sys.path.insert(0, _RSGPT_DIR)
+
 
 class RSGPTPredictor:
     """RSGPT model for retrosynthesis prediction."""
 
     def __init__(
         self,
-        weights_path: str = "weights/finetune_50k.pth",
+        weights_path: str = "weights/finetune_50k_aug20.pth",
         config_path: str = "configs/rxngpt_llama1B.json",
         tokenizer_path: str = "vocab.json",
         device: str = "cuda:0",
@@ -35,7 +41,7 @@ class RSGPTPredictor:
         Args:
             weights_path: Path to model weights (.pth file)
             config_path: Path to model config (JSON file)
-            tokenizer_path: Path to tokenizer (vocab.json)
+            tokenizer_path: Path to HuggingFace tokenizer JSON
             device: Device to run inference on ('cuda:0', 'cuda:1', 'cpu', etc.)
         """
         self.device = device
@@ -58,8 +64,17 @@ class RSGPTPredictor:
         """Load the SMILES BPE tokenizer."""
         from tokenizers import Tokenizer
         self.tokenizer = Tokenizer.from_file(tokenizer_path)
-        self.eos_token_id = self.tokenizer.encode('</s>').ids[0]
-        self.bos_token_id = self.tokenizer.encode('<s>').ids[0]
+        # Disable auto-wrapping with <s>...</s> so we control special tokens
+        self.tokenizer.no_padding()
+        self.tokenizer.no_truncation()
+        # Remove post-processor that auto-adds BOS/EOS
+        from tokenizers.processors import TemplateProcessing
+        self.tokenizer.post_processor = TemplateProcessing(
+            single="$A",
+            special_tokens=[],
+        )
+        self.eos_token_id = 2   # </s>
+        self.bos_token_id = 1   # <s>
 
     def _load_model(self, config_path: str, weights_path: str):
         """Load the LlamaForCausalLM model with pretrained weights."""
@@ -70,28 +85,36 @@ class RSGPTPredictor:
         state_dict = torch.load(weights_path, map_location='cpu')
 
         # Map checkpoint keys to LlamaForCausalLM structure
-        # RxnGPT checkpoint has 'module.' prefix (DDP) and nested structure
+        # RxnGPT DDP checkpoint has two sets of weights:
+        #   module.model.model.* (fine-tuned) and module.* (pre-tuned)
+        # Use the module.model.model.* keys as they contain the fine-tuned weights
         new_state_dict = {}
-        for k, v in state_dict.items():
-            # Remove 'module.' DDP prefix
-            if k.startswith('module.'):
-                k = k[7:]
 
-            # Skip nested duplicate keys
-            if k.startswith('model.model.') or k.startswith('model.lm_head'):
-                continue
-            if k.startswith('model.'):
-                continue
+        # Prefer module.model.model.* keys (fine-tuned weights from DDP wrapper)
+        has_nested = any(k.startswith('module.model.model.') for k in state_dict)
 
-            # Map: embed_tokens -> model.embed_tokens, layers -> model.layers, etc.
-            new_state_dict['model.' + k] = v
-
-        # Load lm_head separately if exists
-        for k, v in state_dict.items():
-            if 'lm_head' in k:
-                clean_k = k.replace('module.', '').replace('model.', '')
-                new_state_dict[clean_k] = v
-                break
+        if has_nested:
+            for k, v in state_dict.items():
+                if k.startswith('module.model.model.'):
+                    # module.model.model.X -> model.X
+                    new_k = 'model.' + k[len('module.model.model.'):]
+                    new_state_dict[new_k] = v
+                elif k.startswith('module.model.lm_head'):
+                    # module.model.lm_head.weight -> lm_head.weight
+                    new_k = k[len('module.model.'):]
+                    new_state_dict[new_k] = v
+        else:
+            # Fallback: module.* keys only
+            for k, v in state_dict.items():
+                if k.startswith('module.'):
+                    k = k[7:]
+                new_state_dict['model.' + k] = v
+            # Load lm_head separately
+            for k, v in state_dict.items():
+                if 'lm_head' in k:
+                    clean_k = k.replace('module.', '').replace('model.', '')
+                    new_state_dict[clean_k] = v
+                    break
 
         self.model.load_state_dict(new_state_dict, strict=False)
         self.model.to(self.device)
@@ -113,9 +136,9 @@ class RSGPTPredictor:
         self,
         input_ids: List[int],
         beam_size: int = 10,
-        max_length: int = 100,
+        max_length: int = 50,
     ) -> List[str]:
-        """Perform beam search decoding."""
+        """Perform beam search decoding (matches original infer.py logic)."""
         input_tensor = torch.tensor(input_ids).unsqueeze(0).to(self.device)
 
         sequences = [(input_tensor, 0.0)]  # (sequence, cumulative score)
@@ -123,29 +146,40 @@ class RSGPTPredictor:
 
         with torch.no_grad():
             for _ in range(max_length):
-                all_candidates = []
+                active_sequences = []
+                active_scores = []
 
                 for seq, score in sequences:
                     if seq[0, -1].item() == self.eos_token_id:
                         completed_sequences.append((seq, score))
-                        continue
+                    else:
+                        active_sequences.append(seq)
+                        active_scores.append(score)
 
-                    outputs = self.model(input_ids=seq)
-                    logits = outputs.logits[:, -1, :]
-                    logits = F.log_softmax(logits, dim=-1)
-
-                    topk_probs, topk_indices = torch.topk(logits, beam_size, dim=-1)
-
-                    for i in range(beam_size):
-                        candidate_seq = torch.cat([seq, topk_indices[:, i].unsqueeze(0)], dim=1)
-                        candidate = (candidate_seq, score - topk_probs[0, i].item())
-                        all_candidates.append(candidate)
-
-                if not all_candidates:
+                if not active_sequences:
                     break
 
+                # Batch all active sequences in one forward pass
+                batch_input = torch.cat(active_sequences, dim=0)
+                outputs = self.model(input_ids=batch_input)
+                logits = outputs.logits[:, -1, :]
+                logits = F.log_softmax(logits, dim=-1)
+
+                all_candidates = []
+                for i in range(len(active_sequences)):
+                    seq = active_sequences[i]
+                    score = active_scores[i]
+                    topk_probs, topk_indices = torch.topk(logits[i], beam_size + 10, dim=-1)
+
+                    for j in range(beam_size + 10):
+                        candidate_seq = torch.cat(
+                            [seq, topk_indices[j].unsqueeze(0).unsqueeze(0)], dim=1
+                        )
+                        candidate = (candidate_seq, score - topk_probs[j].item())
+                        all_candidates.append(candidate)
+
                 ordered = sorted(all_candidates, key=lambda x: x[1])
-                sequences = ordered[:beam_size]
+                sequences = ordered[:beam_size + 10]
 
         completed_sequences.extend(sequences)
         completed_sequences = sorted(completed_sequences, key=lambda x: x[1])
@@ -154,7 +188,7 @@ class RSGPTPredictor:
         decoded = []
         for seq, score in completed_sequences[:beam_size]:
             tokens = seq[0].tolist()
-            text = self.tokenizer.decode(tokens)
+            text = self.tokenizer.decode(tokens, skip_special_tokens=False)
             decoded.append(text)
 
         return decoded

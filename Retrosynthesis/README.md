@@ -1,6 +1,6 @@
 # Retrosynthesis
 
-**Task Leader:** admin
+**Task Leader:** Shuan Chen
 
 Retrosynthesis prediction: Given a target product molecule, predict the reactants needed to synthesize it.
 
@@ -16,27 +16,41 @@ Retrosynthesis prediction: Given a target product molecule, predict the reactant
 ## Test Dataset
 
 - **USPTO-50K**: 5,005 test reactions from US Patent data
-- Location: `data/USPTO_50K_test.pickle`
+- Location: `data/test_demapped.csv`
 
 ## Models
 
-| Model | Paper | Environment |
-|-------|-------|-------------|
-| neuralsym | [Neural-Symbolic Machine Learning for Retrosynthesis and Reaction Prediction (Nature 2018)](https://www.nature.com/articles/nature25978) | `neuralsym` |
-| LocalRetro | [Deep Retrosynthetic Reaction Prediction using Local Reactivity and Global Attention (JACS Au 2021)](https://pubs.acs.org/doi/10.1021/jacsau.1c00246) | `localRetro` |
-| Chemformer | [Chemformer: A Pre-Trained Transformer for Computational Chemistry (Machine Learning: Science and Technology 2022)](https://iopscience.iop.org/article/10.1088/2632-2153/ac3ffb) | `chemformer` |
-| RetroBridge | [RetroBridge: Modeling Retrosynthesis with Markov Bridges (ICLR 2024)](https://openreview.net/forum?id=770DetV8He) | `retrobridge` |
-| RSGPT | [Retrosynthesis prediction with an interpretable deep-learning framework based on molecular assembly tasks (Nature Communications 2025)](https://www.nature.com/articles/s41467-025-62308-6) | `rsgpt` |
+| Model | Paper | Environment | License |
+|-------|-------|-------------|---------|
+| neuralsym | [Neural-Symbolic Machine Learning for Retrosynthesis and Reaction Prediction (Nature 2018)](https://www.nature.com/articles/nature25978) | `neuralsym` | MIT |
+| LocalRetro | [Deep Retrosynthetic Reaction Prediction using Local Reactivity and Global Attention (JACS Au 2021)](https://pubs.acs.org/doi/10.1021/jacsau.1c00246) | `rdenv` | CC BY-NC-SA 4.0 |
+| Chemformer | [Chemformer: A Pre-Trained Transformer for Computational Chemistry (Machine Learning: Science and Technology 2022)](https://iopscience.iop.org/article/10.1088/2632-2153/ac3ffb) | `chemformer` | Apache 2.0 |
+| RetroBridge | [RetroBridge: Modeling Retrosynthesis with Markov Bridges (ICLR 2024)](https://openreview.net/forum?id=770DetV8He) | `retrobridge` | CC BY-NC 4.0 |
+| RSGPT | [Retrosynthesis prediction with an interpretable deep-learning framework based on molecular assembly tasks (Nature Communications 2025)](https://www.nature.com/articles/s41467-025-62308-6) | `gpt` | MIT |
 
 ## Current Results
 
-Results on USPTO-50K test set (500 samples):
+### Quick Validation (50 samples, beam_size=10)
 
-| Model | Top-1 | Top-10 | Top-50 | Duration (s) | Energy (kWh) | CO2 (kg) |
-|-------|-------|--------|--------|--------------|--------------|----------|
-| LocalRetro | - | 89.6% | 94.0% | 302.5 | 0.0052 | 0.0022 |
+| Model | Params | Top-1 | Top-5 | Top-10 |
+|-------|--------|-------|-------|--------|
+| neuralsym | 32.48M | 44.00% | 68.00% | 74.00% |
+| LocalRetro | 8.65M | 56.00% | 88.00% | 92.00% |
+| RetroBridge | 4.62M | 20.00% | 42.00% | 48.00% |
+| Chemformer | ~45M | 88.00% | 94.00% | 94.00% |
+| RSGPT | ~1.6B | 78.00% | 94.00% | 98.00% |
 
-*Hardware: Apple M4 Pro (12 cores), 24GB RAM, CPU-only inference*
+### Full Benchmark (1000 samples, top_k=50)
+
+| Model | Params | Top-1 | Top-5 | Top-10 | Top-50 | Duration (s) | Energy (Wh) | CO2 (g) | Peak GPU (MB) |
+|-------|--------|-------|-------|--------|--------|--------------|-------------|---------|---------------|
+| neuralsym | 32.48M | 43.00% | 67.00% | 72.40% | 74.00% | 192.3 | 21.16 | 8.47 | 504 |
+| LocalRetro | 8.65M | 52.50% | 83.90% | 90.40% | 94.90% | 401.5 | 41.31 | 16.52 | 154 |
+| RetroBridge | 4.62M | - | - | - | - | - | - | - | - |
+| Chemformer | ~45M | - | - | - | - | - | - | - | - |
+| RSGPT | ~1.6B | - | - | - | - | - | - | - | - |
+
+*Hardware: NVIDIA RTX 5000 Ada (32GB), Intel Xeon Platinum 8558 (192 cores), 503GB RAM*
 
 ## Usage
 

@@ -25,6 +25,7 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from benchmarks.carbon_tracker import CarbonTracker, aggregate_results, create_comparison_table
+from Retrosynthesis.evaluate import evaluate as retro_evaluate
 
 
 SUPPORTED_MODELS = {
@@ -122,59 +123,6 @@ def load_test_data(model_name: str) -> Tuple[List[str], List[str]]:
     )
 
 
-def calculate_accuracy(
-    results: List[Dict],
-    ground_truth: List[str],
-    top_k: List[int] = [1, 5, 10]
-) -> Dict[str, float]:
-    """
-    Calculate top-k exact match accuracy.
-
-    Args:
-        results: List of result dicts from uniform interface
-                 Each dict has 'input' and 'predictions' keys
-        ground_truth: List of ground truth SMILES
-        top_k: List of k values to compute accuracy for
-
-    Returns:
-        Dictionary mapping "top_k" to accuracy
-    """
-    from rdkit import Chem
-
-    def canonicalize(smiles: str) -> Optional[str]:
-        """Canonicalize SMILES string."""
-        try:
-            mol = Chem.MolFromSmiles(smiles)
-            if mol is not None:
-                return Chem.MolToSmiles(mol)
-        except:
-            pass
-        return None
-
-    accuracy_results = {}
-    n_samples = len(ground_truth)
-
-    for k in top_k:
-        correct = 0
-        for result, gt in zip(results, ground_truth):
-            gt_canon = canonicalize(gt)
-            if gt_canon is None:
-                continue
-
-            # Get top-k predictions from uniform format
-            predictions = result.get('predictions', [])[:k]
-            for pred in predictions:
-                pred_smiles = pred.get('smiles', '') if isinstance(pred, dict) else pred
-                pred_canon = canonicalize(pred_smiles)
-                if pred_canon == gt_canon:
-                    correct += 1
-                    break
-
-        accuracy_results[f"top_{k}"] = correct / n_samples if n_samples > 0 else 0.0
-
-    return accuracy_results
-
-
 def run_inference_benchmark(
     model_name: str,
     run_id: int = 1,
@@ -257,8 +205,9 @@ def run_inference_benchmark(
             if (i + batch_size) % 500 == 0:
                 print(f"  Processed {min(i + batch_size, len(products))}/{len(products)}")
 
-    # Calculate accuracy using uniform format
-    accuracy = calculate_accuracy(all_results, ground_truth)
+    # Calculate accuracy using canonical evaluator from Retrosynthesis.evaluate
+    test_cases = [{'ground_truth': gt} for gt in ground_truth]
+    accuracy = retro_evaluate(all_results, test_cases)
     print(f"\nAccuracy: Top-1={accuracy['top_1']:.2%}, Top-10={accuracy['top_10']:.2%}")
 
     # Add metrics

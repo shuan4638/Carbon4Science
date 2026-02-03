@@ -8,6 +8,7 @@ Metrics:
 - top_50: Correct answer in top 50 predictions
 """
 
+import csv
 import os
 import pickle
 from typing import Dict, List, Optional
@@ -18,7 +19,7 @@ from rdkit import Chem
 METRICS = ["top_1", "top_5", "top_10", "top_50"]
 
 # Default test data location (relative to this file)
-DEFAULT_TEST_DATA = "data/USPTO_50K_test.pickle"
+DEFAULT_TEST_DATA = "data/test_demapped.csv"
 
 
 def remove_atom_mapping(smiles: str) -> str:
@@ -52,23 +53,61 @@ def load_test_data(data_path: Optional[str] = None, limit: Optional[int] = None)
         this_dir = os.path.dirname(os.path.abspath(__file__))
         data_path = os.path.join(this_dir, DEFAULT_TEST_DATA)
 
-    with open(data_path, 'rb') as f:
-        data = pickle.load(f)
-
     test_cases = []
-    for idx, row in data.iterrows():
-        # Expected columns: product_smiles, reactant_smiles (or similar)
-        product = row.get('product_smiles', row.get('product', ''))
-        ground_truth = row.get('reactant_smiles', row.get('reactants', ''))
 
-        if product and ground_truth:
-            test_cases.append({
-                'product': product,
-                'ground_truth': ground_truth
-            })
+    if data_path.endswith('.csv'):
+        # CSV format: "id,class,reactants>reagents>production"
+        with open(data_path, 'r') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                rxn_col = row.get('reactants>reagents>production', '')
+                if rxn_col:
+                    # Split by '>' to get [reactants, reagents, product]
+                    parts = rxn_col.split('>')
+                    if len(parts) == 3:
+                        reactants, reagents, product = parts
+                    elif '>>' in rxn_col:
+                        reactants, product = rxn_col.split('>>', 1)
+                    else:
+                        continue
+                    if product and reactants:
+                        test_cases.append({
+                            'product': product.strip(),
+                            'ground_truth': reactants.strip()
+                        })
+                if limit and len(test_cases) >= limit:
+                    break
+    elif data_path.endswith('.pickle') or data_path.endswith('.pkl'):
+        with open(data_path, 'rb') as f:
+            data = pickle.load(f)
 
-        if limit and len(test_cases) >= limit:
-            break
+        if isinstance(data, list):
+            # Data is a list of reaction SMILES strings: "reactants>>product"
+            for rxn_smiles in data:
+                if '>>' not in rxn_smiles:
+                    continue
+                reactants, product = rxn_smiles.split('>>', 1)
+                if product and reactants:
+                    test_cases.append({
+                        'product': product,
+                        'ground_truth': reactants
+                    })
+                if limit and len(test_cases) >= limit:
+                    break
+        else:
+            # Data is a DataFrame with product/reactant columns
+            for idx, row in data.iterrows():
+                product = row.get('product_smiles', row.get('product', ''))
+                ground_truth = row.get('reactant_smiles', row.get('reactants', ''))
+                if product and ground_truth:
+                    test_cases.append({
+                        'product': product,
+                        'ground_truth': ground_truth
+                    })
+                if limit and len(test_cases) >= limit:
+                    break
+    else:
+        raise ValueError(f"Unsupported file format: {data_path}")
 
     return test_cases
 
@@ -111,12 +150,16 @@ def evaluate(
 
     for pred, test_case in zip(predictions, test_cases):
         # Canonicalize ground truth
-        gt = canonicalize_smiles(test_case['ground_truth'])
+        gt = test_case['ground_truth']
 
         # Extract SMILES from predictions
         pred_smiles = []
-        if isinstance(pred, list):
-            for p in pred:
+        # Handle dict format from run_benchmark.py: {'input': ..., 'predictions': [...]}
+        pred_list = pred
+        if isinstance(pred, dict):
+            pred_list = pred.get('predictions', [])
+        if isinstance(pred_list, list):
+            for p in pred_list:
                 if isinstance(p, dict):
                     smiles = p.get('smiles', p.get('precursors', ''))
                     if isinstance(smiles, list):
@@ -139,5 +182,8 @@ def evaluate(
     n = len(test_cases)
     for metric in metrics:
         results[metric] = correct_counts[metric] / n if n > 0 else 0.0
+
+    # Include raw correct counts for reporting
+    results["correct"] = {m: correct_counts[m] for m in metrics}
 
     return results

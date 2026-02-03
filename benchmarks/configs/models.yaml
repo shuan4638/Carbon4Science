@@ -24,7 +24,7 @@ RetroBridge:
 
 Chemformer:
   env: chemformer
-  checkpoint: null  # User must specify
+  checkpoint: Retrosynthesis/Chemformer/model/last.ckpt
   checkpoint_url: https://az.box.com/s/7eci3nd9vy0xplqniitpk02rbg9q2zcq
   vocabulary: Retrosynthesis/Chemformer/bart_vocab_downstream.json
   data_dir: Retrosynthesis/Chemformer/data

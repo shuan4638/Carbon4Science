@@ -6,6 +6,8 @@ Usage:
     results = run("CCO")  # Single SMILES
     results = run(["CCO", "CCCO"])  # Multiple SMILES
 """
+import os
+import sys
 import torch
 import torch.nn as nn
 import numpy as np
@@ -14,6 +16,11 @@ from typing import Dict, List, Union
 from scipy import sparse
 from rdkit import RDLogger
 from rdchiral.main import rdchiralReaction, rdchiralReactants, rdchiralRun
+
+# Add neuralsym directory to path so local modules are importable from any working directory
+_NEURALSYM_DIR = os.path.dirname(os.path.abspath(__file__))
+if _NEURALSYM_DIR not in sys.path:
+    sys.path.insert(0, _NEURALSYM_DIR)
 
 from model import TemplateNN_Highway
 from prepare_data import mol_smi_to_count_fp
@@ -52,6 +59,7 @@ class _Proposer:
         checkpoint = torch.load(
             CHECKPOINT_FOLDER / f"{infer_config['expt_name']}.pth.tar",
             map_location=self.device,
+            weights_only=False,
         )
         self.model = TemplateNN_Highway(
             output_size=len(self.templates),

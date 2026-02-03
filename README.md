@@ -9,81 +9,135 @@ A benchmarking framework for evaluating the **carbon efficiency** of generative 
 
 Artificial intelligence is accelerating scientific discovery, yet current evaluation practices focus almost exclusively on accuracy, neglecting the computational and environmental costs of increasingly complex generative models. This oversight obscures a critical trade-off: **state-of-the-art performance often comes at disproportionate expense**, with order-of-magnitude increases in carbon emissions yielding only marginal improvements.
 
-We present **The Carbon Cost of Generative AI for Science**, a benchmarking framework that systematically evaluates the carbon efficiency of generative models—including diffusion models and large language models—for scientific discovery. Spanning three core tasks (**molecule generation**, **retrosynthesis**, and **material generation**), we assess open-source models using standardized protocols that jointly measure predictive performance and carbon footprint.
+We present **The Carbon Cost of Generative AI for Science**, a benchmarking framework that systematically evaluates the carbon efficiency of generative models—including diffusion models and large language models—for scientific discovery. Spanning four core tasks (**retrosynthesis**, **molecule generation**, **material generation**, and **machine learning interatomic potentials**), we assess open-source models using standardized protocols that jointly measure predictive performance and carbon footprint.
 
-**Key Finding**: Simpler, specialized models frequently match or approach state-of-the-art accuracy while consuming **10–100× less compute**.
+**Key Finding**: Simpler, specialized models frequently match or approach state-of-the-art accuracy while consuming **10-100x less compute**.
 
 ## Tasks
 
-| Task | Branch | Status |
-|------|--------|--------|
-| Retrosynthesis | `retrosynthesis` | In Progress |
-| Molecule Generation | `molecule_generation` | Planned |
-| Material Generation | `material_generation` | Planned |
+| Task | Directory | Leader | Status |
+|------|-----------|--------|--------|
+| Retrosynthesis | `Retrosynthesis/` | Shuan Chen | In Progress |
+| Molecule Generation | `MolGen/` | Gunwook Nam | Planned |
+| Material Generation | `MatGen/` | Junkil Park | Planned |
+| ML Interatomic Potentials | `MLIP/` | Junkil Park | Planned |
+
+---
+
+## Guide for Task Leaders
+
+Each task leader is responsible for benchmarking models in their domain. **Use Claude Code** to accelerate the process. The workflow is the same for every task:
+
+### Step 1: Set Up Your Task Directory
+
+Your task directory should follow this structure:
+
+```
+<Task>/
+├── README.md           # Task description, metrics, models, results table
+├── evaluate.py         # Evaluation module (metrics + test data loading)
+├── data/               # Test datasets
+├── <Model1>/
+│   ├── Inference.py    # Uniform interface (must implement run())
+│   ├── environment.yml # Conda environment
+│   ├── CLAUDE.md       # Model-specific guidance for Claude Code
+│   └── models/         # Checkpoints (gitignored)
+├── <Model2>/
+│   └── ...
+└── ...
+```
+
+See `Retrosynthesis/` for a complete reference implementation.
+
+### Step 2: Implement the Evaluation Module
+
+Create `<Task>/evaluate.py` with:
+
+```python
+METRICS = ["metric_1", "metric_2", ...]  # Available metrics
+
+def load_test_data(data_path=None, limit=None):
+    """Load test dataset. Returns list of dicts."""
+    ...
+
+def evaluate(predictions, test_cases, metrics=None):
+    """Compute metrics. Returns dict of metric_name -> score."""
+    ...
+```
+
+### Step 3: Add Models with Uniform Interface
+
+Each model must implement `Inference.py` with a `run()` function:
+
+```python
+def run(input_data, top_k=10) -> List[Dict]:
+    """
+    Returns:
+        [{'input': '...', 'predictions': [{'smiles': '...', 'score': 0.95}, ...]}]
+    """
+```
+
+Each model needs its own conda environment (`environment.yml`) to avoid dependency conflicts.
+
+### Step 4: Register in the Benchmark Runner
+
+Update these files to include your task and models:
+
+1. `benchmarks/run_benchmark.py` - Add task and model mappings
+2. `benchmarks/run.sh` - Add conda environment mappings
+3. `benchmarks/setup_envs.sh` - Add environment setup functions
+4. `benchmarks/configs/models.yaml` - Add model configurations
+
+### Step 5: Run Benchmarks with Carbon Tracking
+
+```bash
+# Run a single model
+./benchmarks/run.sh --model <ModelName> --limit 1000 --track_carbon
+
+# Run all models for your task
+./benchmarks/run.sh --model all --limit 1000 --track_carbon
+```
+
+### Step 6: Report Results
+
+Update your task's `README.md` with the results table:
+
+```markdown
+| Model | Params | Metric-1 | Metric-2 | Duration (s) | Energy (Wh) | CO2 (g) | Peak GPU (MB) |
+```
 
 ---
 
 ## Getting Started
 
-### Step 1: Clone the Repository
+### Prerequisites
+
+- Linux with NVIDIA GPU(s)
+- Conda (Miniconda or Anaconda)
+- Git
+
+### Clone and Setup
 
 ```bash
-# Clone main branch (benchmark infrastructure only)
 git clone https://github.com/shuan4638/Carbon4Science.git
 cd Carbon4Science
 
-# For retrosynthesis models, switch to that branch
-git checkout retrosynthesis
+# Setup environments for a specific task
+cd benchmarks
+./setup_envs.sh            # All retrosynthesis models
+./setup_envs.sh neuralsym  # Single model
 ```
 
-### Step 2: Setup Environments
-
-**Important**: Each model requires a different conda environment due to incompatible dependencies.
+### Run a Benchmark
 
 ```bash
 cd benchmarks
 
-# Setup ALL environments (recommended, takes ~30 min)
-chmod +x setup_envs.sh
-./setup_envs.sh
+# Single model with carbon tracking
+./run.sh --model neuralsym --limit 100 --track_carbon
 
-# OR setup a specific model's environment
-./setup_envs.sh neuralsym
-./setup_envs.sh LocalRetro
-```
-
-### Step 3: Download Model Checkpoints
-
-```bash
-# RetroBridge
-mkdir -p Retrosynthesis/RetroBridge/models
-wget https://zenodo.org/record/10688201/files/retrobridge.ckpt \
-     -O Retrosynthesis/RetroBridge/models/retrobridge.ckpt
-
-# See benchmarks/configs/models.yaml for all checkpoint URLs
-```
-
-### Step 4: Run Benchmarks
-
-```bash
-cd benchmarks
-
-# Run a single model (auto-switches conda environment)
-./run.sh --model neuralsym --smiles "CCO" --device cuda:0
-
-# Run with carbon tracking
-./run.sh --model LocalRetro --smiles "CCO" --track_carbon
-
-# Run with evaluation metrics
-./run.sh --model neuralsym \
-    --input ../data/test.csv \
-    --ground_truth ../data/test_reactants.csv \
-    --metric top_1 top_10 \
-    --track_carbon \
-    --output results/neuralsym_results.json
-
-# Run ALL models for comparison
-./run.sh --model all --input ../data/test.csv --track_carbon
+# All models
+./run.sh --model all --limit 1000 --track_carbon --output results/benchmark.json
 ```
 
 ---
@@ -93,55 +147,50 @@ cd benchmarks
 ```
 Carbon4Science/
 ├── README.md                 # This file
-├── CONTRIBUTING.md           # How to contribute
-├── LICENSE                   # MIT License
+├── CLAUDE.md                 # Instructions for Claude Code
+├── .claude/skills/           # Claude Code skills (add-model, benchmark, evaluate)
 │
-├── benchmarks/               # Benchmark infrastructure (main branch)
+├── benchmarks/               # Shared benchmark infrastructure
 │   ├── run.sh               # Unified runner (handles conda envs)
-│   ├── setup_envs.sh        # Environment setup script
-│   ├── run_benchmark.py     # Python benchmark script
-│   ├── carbon_tracker.py    # Carbon measurement module
-│   ├── configs/
-│   │   ├── models.yaml      # Model checkpoints & requirements
-│   │   └── hardware_template.yaml
-│   └── results/             # Benchmark outputs
+│   ├── run_benchmark.py     # Python benchmark runner
+│   ├── carbon_tracker.py    # Carbon/energy measurement
+│   ├── setup_envs.sh        # Environment setup
+│   ├── configs/             # Model configs, hardware specs
+│   └── results/             # Benchmark outputs (JSON)
 │
-├── Retrosynthesis/          # (retrosynthesis branch only)
-│   ├── neuralsym/
-│   ├── LocalRetro/
-│   ├── RetroBridge/
-│   ├── Chemformer/
-│   └── RSGPT/
+├── Retrosynthesis/          # Retrosynthesis task (Shuan Chen)
+│   ├── neuralsym/           # Template-based, Nature 2018
+│   ├── LocalRetro/          # MPNN + attention, JACS Au 2021
+│   ├── RetroBridge/         # Markov bridges, ICLR 2024
+│   ├── Chemformer/          # BART transformer, ML:ST 2022
+│   └── RSGPT/               # GPT 1.6B params, Nat. Comm. 2025
 │
-├── MolGen/                  # (molecule_generation branch)
-└── MatGen/                  # (material_generation branch)
+├── MolGen/                  # Molecule generation (Gunwook Nam)
+├── MatGen/                  # Material generation (Junkil Park)
+└── MLIP/                    # ML interatomic potentials (Junkil Park)
 ```
 
 ---
 
-## For Contributors
+## Using Claude Code
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines on:
-- Adding new models
-- Running benchmarks
-- Submitting results
+This repository is designed to work with [Claude Code](https://claude.ai/code). Each task directory includes a `CLAUDE.md` file with model-specific instructions. Claude Code skills are available:
 
-### Quick Reference: Uniform Model Interface
+- `/add-model <Task> <ModelName>` - Step-by-step guide to add a new model
+- `/benchmark <ModelName>` - Run a carbon-tracked benchmark
+- `/evaluate <Task>` - Run evaluation on predictions
 
-All models must implement this interface in `Inference.py`:
+To get started with Claude Code on your task:
 
-```python
-def run(smiles, top_k=10) -> List[Dict]:
-    """
-    Args:
-        smiles: str or List[str] - Input SMILES
-        top_k: int - Number of predictions
-
-    Returns:
-        List[Dict] with format:
-        [{'input': 'CCO', 'predictions': [{'smiles': '...', 'score': 0.95}, ...]}]
-    """
+```bash
+cd Carbon4Science
+claude  # Launch Claude Code
 ```
+
+Then tell Claude what you want to do, e.g.:
+- "Add a new model called DiffSBDD to MolGen"
+- "Run benchmark for all MatGen models with 1000 samples"
+- "Set up the MLIP evaluation pipeline"
 
 ---
 

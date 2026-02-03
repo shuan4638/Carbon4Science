@@ -78,14 +78,30 @@ def run(smiles, top_k=10, verbose=False):
 
     results = []
     for smi in smiles_list:
-        df = model.retrosnythesis(smi, top_k=top_k, verbose=verbose)
+        # Request extra predictions to compensate for filtered self-predictions
+        df = model.retrosnythesis(smi, top_k=top_k + 5, verbose=verbose)
         formatted_preds = []
         if df is not None and len(df) > 0:
+            # Canonicalize input for comparison
+            from rdkit import Chem
+            input_mol = Chem.MolFromSmiles(smi)
+            input_canonical = Chem.MolToSmiles(input_mol) if input_mol else smi
+
             for _, row in df.iterrows():
+                score = float(row['Score'])
+                pred_smiles = row['SMILES']
+                # Skip NaN scores (no-reaction template) and self-predictions
+                if score != score:  # NaN check
+                    continue
+                pred_mol = Chem.MolFromSmiles(pred_smiles)
+                if pred_mol and Chem.MolToSmiles(pred_mol) == input_canonical:
+                    continue
                 formatted_preds.append({
-                    'smiles': row['SMILES'],
-                    'score': float(row['Score'])
+                    'smiles': pred_smiles,
+                    'score': score
                 })
+                if len(formatted_preds) >= top_k:
+                    break
         results.append({
             'input': smi,
             'predictions': formatted_preds

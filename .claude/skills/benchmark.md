@@ -11,6 +11,7 @@ Run a carbon-tracked benchmark on a model.
 ```
 /benchmark LocalRetro --limit 100 --track_carbon
 /benchmark neuralsym --limit 500
+/benchmark MACE --limit 1000 --track_carbon
 ```
 
 ## Instructions
@@ -18,40 +19,45 @@ Run a carbon-tracked benchmark on a model.
 When the user invokes this skill:
 
 1. **Identify the model and options:**
-   - Model name (required): LocalRetro, neuralsym, RetroBridge, Chemformer, RSGPT
+   - Model name (required)
    - `--limit N`: Number of test samples (default: full dataset)
    - `--track_carbon`: Enable carbon tracking (default: off)
    - `--metrics`: Metrics to compute (default: task defaults)
+   - `--task`: Task name (default: auto-detect from model name)
 
 2. **Activate the correct conda environment:**
    ```bash
-   source /Users/admin/opt/anaconda3/etc/profile.d/conda.sh
+   source /opt/conda/etc/profile.d/conda.sh
    conda activate <env_name>
    ```
 
-   Environment mapping:
-   - neuralsym → `neuralsym`
-   - LocalRetro → `rdenv`
-   - RetroBridge → `retrobridge`
-   - Chemformer → `chemformer`
-   - RSGPT → `gpt`
+   Known environment mappings (Retrosynthesis):
+   - neuralsym -> `neuralsym`
+   - LocalRetro -> `rdenv`
+   - RetroBridge -> `retrobridge`
+   - Chemformer -> `chemformer`
+   - RSGPT -> `gpt`
+
+   For other tasks, check the model's `environment.yml` or `benchmarks/run.sh`.
 
 3. **Run the benchmark:**
    ```bash
    python benchmarks/run_benchmark.py \
-       --task Retrosynthesis \
+       --task <Task> \
        --model <model_name> \
        --limit <N> \
        --track_carbon \
-       --output benchmarks/results/<model>_benchmark.json
+       --output benchmarks/results/<model>_<N>.json
    ```
 
 4. **Report results:**
-   - Show accuracy metrics (top_1, top_10, top_50)
-   - Show carbon metrics (duration, energy, CO2)
+   - Show accuracy metrics (task-specific)
+   - Show carbon metrics (duration, energy, CO2, peak GPU memory)
    - Note the output file location
+   - Update the task README.md with results
 
 ## Notes
 - Always run from the repository root directory
 - Results are saved to `benchmarks/results/`
 - Use `--limit` for quick tests to avoid long runtimes
+- For parallel GPU execution, use `CUDA_VISIBLE_DEVICES=<N>` prefix

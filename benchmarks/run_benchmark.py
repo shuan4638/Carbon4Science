@@ -45,6 +45,10 @@ TASKS = {
         "eval_module": "MatGen.evaluate",
         "models": {}  # To be added
     },
+    "MLIP": {
+        "eval_module": "MLIP.evaluate",
+        "models": {}  # To be added
+    },
 }
 
 
@@ -61,8 +65,22 @@ def get_task_evaluator(task_name: str):
         raise ImportError(f"Could not load evaluation module for {task_name}: {e}")
 
 
+def _load_model_config(model_name: str) -> dict:
+    """Load model config from models.yaml if available."""
+    config_path = Path(__file__).resolve().parent / "configs" / "models.yaml"
+    if not config_path.exists():
+        return {}
+    try:
+        import yaml
+        with open(config_path) as f:
+            configs = yaml.safe_load(f)
+        return configs.get(model_name, {})
+    except ImportError:
+        return {}
+
+
 def get_model_run_func(task_name: str, model_name: str):
-    """Load the model's run function."""
+    """Load the model's run function, handling model-specific initialization."""
     if task_name not in TASKS:
         raise ValueError(f"Unknown task: {task_name}")
 
@@ -72,7 +90,60 @@ def get_model_run_func(task_name: str, model_name: str):
 
     module_name = models[model_name]
     module = importlib.import_module(module_name)
+
+    # If the module has a load_model() function (e.g. Chemformer), call it first
+    if hasattr(module, 'load_model') and callable(module.load_model):
+        config = _load_model_config(model_name)
+        checkpoint = config.get('checkpoint')
+        if checkpoint:
+            checkpoint = str(ROOT_DIR / checkpoint)
+        vocabulary = config.get('vocabulary')
+        if vocabulary:
+            vocabulary = str(ROOT_DIR / vocabulary)
+
+        kwargs = {}
+        if checkpoint:
+            kwargs['model_path'] = checkpoint
+        if vocabulary:
+            kwargs['vocabulary_path'] = vocabulary
+        if kwargs:
+            module.load_model(**kwargs)
+
     return module.run
+
+
+def count_model_parameters(task_name: str, model_name: str) -> Optional[int]:
+    """Count trainable parameters by running a dummy inference to trigger model loading."""
+    try:
+        import torch
+        # After run() is called once, models are typically cached as module globals.
+        # Search all loaded modules for PyTorch models.
+        module_name = TASKS[task_name]["models"][model_name]
+        module = sys.modules.get(module_name)
+        if module is None:
+            return None
+
+        # Look for nn.Module instances in module globals and common patterns
+        for attr_name in dir(module):
+            obj = getattr(module, attr_name, None)
+            if isinstance(obj, torch.nn.Module):
+                return sum(p.numel() for p in obj.parameters())
+
+        # Check common lazy-init patterns: _model, _proposer, etc.
+        for var_name in ['_model', '_proposer', '_model_instance']:
+            obj = getattr(module, var_name, None)
+            if obj is None:
+                continue
+            # Could be a wrapper object containing a model attribute
+            if isinstance(obj, torch.nn.Module):
+                return sum(p.numel() for p in obj.parameters())
+            # Check if it has a .model attribute (e.g., neuralsym _Proposer.model)
+            inner = getattr(obj, 'model', None)
+            if isinstance(inner, torch.nn.Module):
+                return sum(p.numel() for p in inner.parameters())
+    except Exception:
+        pass
+    return None
 
 
 def run_benchmark(
@@ -182,12 +253,16 @@ def run_benchmark(
         print("Evaluating predictions...")
     eval_results = evaluator.evaluate(predictions, test_cases, metrics)
 
+    # Count model parameters (model is loaded after first inference call)
+    num_params = count_model_parameters(task_name, model_name)
+
     # Compile final results
     results = {
         "task": task_name,
         "model": model_name,
         "num_samples": len(test_cases),
         "top_k": top_k,
+        "model_params": num_params,
         "metrics": metrics,
         "accuracy": {m: eval_results[m] for m in metrics},
         "correct": eval_results.get("correct", {}),
@@ -201,6 +276,13 @@ def run_benchmark(
         print("RESULTS")
         print("=" * 60)
         print(f"Samples: {len(test_cases)}")
+        if num_params is not None:
+            if num_params >= 1_000_000_000:
+                print(f"Params:  {num_params:,} ({num_params/1e9:.2f}B)")
+            elif num_params >= 1_000_000:
+                print(f"Params:  {num_params:,} ({num_params/1e6:.2f}M)")
+            else:
+                print(f"Params:  {num_params:,} ({num_params/1e3:.1f}K)")
         print()
         print("Accuracy:")
         for m in metrics:
@@ -209,11 +291,18 @@ def run_benchmark(
             print(f"  {m}: {acc:.2f}% ({correct}/{len(test_cases)})")
         print()
         print(f"Duration: {carbon_metrics.get('duration_seconds', duration):.1f}s")
-        if track_carbon:
-            energy = carbon_metrics.get('energy_kwh', 0) * 1000
-            co2 = carbon_metrics.get('emissions_kg_co2', 0) * 1000
-            print(f"Energy:   {energy:.4f} Wh")
-            print(f"CO2:      {co2:.4f} g")
+        energy_wh = carbon_metrics.get('energy_wh', 0)
+        co2_g = carbon_metrics.get('emissions_g_co2', 0)
+        if energy_wh > 0:
+            print(f"Energy:   {energy_wh:.4f} Wh")
+        if co2_g > 0:
+            print(f"CO2:      {co2_g:.4f} g")
+        peak_gpu = carbon_metrics.get('peak_gpu_memory_mb', 0)
+        peak_cpu = carbon_metrics.get('peak_cpu_memory_mb', 0)
+        if peak_gpu > 0:
+            print(f"Peak GPU: {peak_gpu:.1f} MB")
+        if peak_cpu > 0:
+            print(f"Peak CPU: {peak_cpu:.1f} MB")
         print("=" * 60)
 
     # Save results

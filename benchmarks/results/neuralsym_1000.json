@@ -1,0 +1,50 @@
+{
+  "task": "Retrosynthesis",
+  "model": "neuralsym",
+  "num_samples": 1000,
+  "top_k": 50,
+  "model_params": 32483398,
+  "metrics": [
+    "top_1",
+    "top_5",
+    "top_10",
+    "top_50"
+  ],
+  "accuracy": {
+    "top_1": 0.43,
+    "top_5": 0.67,
+    "top_10": 0.724,
+    "top_50": 0.74
+  },
+  "correct": {
+    "top_1": 430,
+    "top_5": 670,
+    "top_10": 724,
+    "top_50": 740
+  },
+  "carbon": {
+    "start_time": "2026-02-03T17:49:35.967392",
+    "end_time": "2026-02-03T17:52:48.286870",
+    "duration_seconds": 192.3194773197174,
+    "energy_wh": 21.1625,
+    "emissions_g_co2": 8.465,
+    "gpu_energy_wh": 8.7994,
+    "cpu_energy_wh": 12.3458,
+    "ram_energy_wh": 0.0173,
+    "peak_gpu_memory_mb": 504.2,
+    "peak_cpu_memory_mb": 883.7,
+    "project_name": "neuralsym_Retrosynthesis_benchmark",
+    "model_name": "neuralsym",
+    "task": "inference",
+    "hardware": {
+      "gpu_model": "NVIDIA RTX 5000 Ada Generation",
+      "gpu_count": 8,
+      "gpu_memory_gb": 31.9921875,
+      "cpu_model": "INTEL(R) XEON(R) PLATINUM 8558",
+      "cpu_cores": 192,
+      "ram_gb": 503.0359344482422,
+      "cuda_version": "Driver 580.82.09",
+      "platform": "Linux-5.14.0-570.17.1.el9_6.x86_64-x86_64-with-glibc2.34"
+    }
+  }
+}

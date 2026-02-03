@@ -98,8 +98,7 @@ def train(args):
                     mode='max', # monitor top-1 val accuracy
                     factor=args.lr_scheduler_factor,
                     patience=args.lr_scheduler_patience,
-                    cooldown=args.lr_cooldown,
-                    verbose=True
+                    cooldown=args.lr_cooldown
                 )
     
     train_losses, valid_losses = [], []

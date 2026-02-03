@@ -11,6 +11,8 @@ Run task-specific evaluation on predictions.
 ```
 /evaluate Retrosynthesis
 /evaluate MolGen
+/evaluate MatGen
+/evaluate MLIP
 ```
 
 ## Instructions
@@ -19,59 +21,53 @@ When the user invokes this skill:
 
 ### For Retrosynthesis
 
-1. **Load the evaluation module:**
-   ```python
-   from Retrosynthesis.evaluate import load_test_data, evaluate, METRICS
-   ```
-
-2. **Available metrics:**
-   - `top_1`: Exact match at rank 1
-   - `top_5`: Correct in top 5 predictions
-   - `top_10`: Correct in top 10 predictions
-   - `top_50`: Correct in top 50 predictions
-
+1. **Available metrics:** `top_1`, `top_5`, `top_10`, `top_50`
+2. **Test data:** `Retrosynthesis/data/test_demapped.csv`
 3. **Run evaluation:**
    ```python
-   # Load test data
+   from Retrosynthesis.evaluate import load_test_data, evaluate, METRICS
+
    test_cases = load_test_data(limit=100)
-
-   # Run model inference
    predictions = [model.run(tc['product'], top_k=50) for tc in test_cases]
-
-   # Evaluate
-   results = evaluate(predictions, test_cases, metrics=['top_10', 'top_50'])
-   print(f"Top-10: {results['top_10']*100:.2f}%")
-   print(f"Top-50: {results['top_50']*100:.2f}%")
+   results = evaluate(predictions, test_cases)
    ```
 
-### For MolGen (Template)
+### For MolGen
 
-1. **Available metrics:**
-   - `validity`: Fraction of valid SMILES
-   - `uniqueness`: Fraction of unique molecules
-   - `novelty`: Fraction not in training set
-   - `diversity`: Internal Tanimoto diversity
-
-2. **Evaluation:**
+1. **Available metrics:** `validity`, `uniqueness`, `novelty`, `diversity`
+2. **Run evaluation:**
    ```python
    from MolGen.evaluate import evaluate, METRICS
 
    results = evaluate(generated_smiles, reference_smiles=train_smiles)
    ```
 
-### For MatGen (Template)
+### For MatGen
 
-1. **Available metrics:**
-   - `validity`: Fraction of valid structures
-   - `uniqueness`: Fraction of unique structures
-   - `stability`: Fraction predicted stable
-   - `coverage`: Fraction of compositions covered
+1. **Available metrics:** `validity`, `uniqueness`, `stability`, `coverage`
+2. **Run evaluation:**
+   ```python
+   from MatGen.evaluate import evaluate, METRICS
+
+   results = evaluate(generated_structures, reference_structures=train_structures)
+   ```
+
+### For MLIP
+
+1. **Available metrics:** `energy_mae`, `force_mae`, `force_cosine`, `stress_mae`
+2. **Run evaluation:**
+   ```python
+   from MLIP.evaluate import evaluate, METRICS
+
+   results = evaluate(predictions, test_cases)
+   ```
 
 ## Test Data Locations
 
-- Retrosynthesis: `Retrosynthesis/data/USPTO_50K_test.pickle`
+- Retrosynthesis: `Retrosynthesis/data/test_demapped.csv`
 - MolGen: `MolGen/data/` (to be added)
 - MatGen: `MatGen/data/` (to be added)
+- MLIP: `MLIP/data/` (to be added)
 
 ## Notes
 - Each task defines its own metrics in `<Task>/evaluate.py`

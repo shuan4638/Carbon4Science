@@ -9,8 +9,15 @@ Usage:
     print(results)  # List of predicted reactant SMILES
 """
 
+import os
+import sys
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
+
+# Add RetroBridge directory to path so 'src' package is importable from any working directory
+_RETROBRIDGE_DIR = os.path.dirname(os.path.abspath(__file__))
+if _RETROBRIDGE_DIR not in sys.path:
+    sys.path.insert(0, _RETROBRIDGE_DIR)
 
 import torch
 from rdkit import Chem
@@ -169,7 +176,7 @@ def run(
     smiles,
     top_k: int = 10,
     n_steps: int = 500,
-    checkpoint_path: str = "models/retrobridge.ckpt",
+    checkpoint_path: str = None,
     device: str = None,
     seed: int = 42,
     return_rdkit: bool = False,
@@ -211,6 +218,10 @@ def run(
     # Set random seed for reproducibility
     from src.utils import set_deterministic
     set_deterministic(seed)
+
+    # Default checkpoint path relative to this file's directory
+    if checkpoint_path is None:
+        checkpoint_path = os.path.join(_RETROBRIDGE_DIR, "models", "retrobridge.ckpt")
 
     # Load model if not already loaded
     if _model is None:

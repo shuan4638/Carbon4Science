@@ -28,9 +28,16 @@ sparse_fp = scipy.sparse.csr_matrix
 def mol_smi_to_count_fp(
     mol_smi: str, radius: int = 2, fp_size: int = 32681, dtype: str = "int32"
 ) -> scipy.sparse.csr_matrix:
-    fp_gen = GetMorganGenerator(
-        radius=radius, useCountSimulation=True, includeChirality=True, fpSize=fp_size
-    )
+    try:
+        # Newer RDKit (2023+) API
+        fp_gen = GetMorganGenerator(
+            radius=radius, useCountSimulation=True, includeChirality=True, fpSize=fp_size
+        )
+    except TypeError:
+        # Older RDKit (2022.x) API uses different parameter names
+        fp_gen = GetMorganGenerator(
+            radius=radius, countSimulation=True, includeChirality=True, fpSize=fp_size
+        )
     mol = Chem.MolFromSmiles(mol_smi)
     uint_count_fp = fp_gen.GetCountFingerprint(mol)
     count_fp = np.empty((1, fp_size), dtype=dtype)
