@@ -58,137 +58,76 @@ Five models benchmarked on 1,000 samples from the USPTO-50K test set, evaluated 
 
 ---
 
-## Guide for Task Leaders
+## For Task Leaders
 
-Each task leader is responsible for benchmarking models in their domain. **Use Claude Code** to accelerate the process. The workflow is the same for every task:
-
-### Step 1: Set Up Your Task Directory
-
-Your task directory should follow this structure:
-
-```
-<Task>/
-├── README.md           # Task description, metrics, models, results table
-├── evaluate.py         # Evaluation module (metrics + test data loading)
-├── data/               # Test datasets
-├── <Model1>/
-│   ├── Inference.py    # Uniform interface (must implement run())
-│   ├── environment.yml # Conda environment
-│   ├── CLAUDE.md       # Model-specific guidance for Claude Code
-│   └── models/         # Checkpoints (gitignored)
-├── <Model2>/
-│   └── ...
-└── ...
-```
-
-See `Retro/` for a complete reference implementation.
-
-### Step 2: Implement the Evaluation Module
-
-Create `<Task>/evaluate.py` with:
-
-```python
-METRICS = ["metric_1", "metric_2", ...]  # Available metrics
-
-def load_test_data(data_path=None, limit=None):
-    """Load test dataset. Returns list of dicts."""
-    ...
-
-def evaluate(predictions, test_cases, metrics=None):
-    """Compute metrics. Returns dict of metric_name -> score."""
-    ...
-```
-
-### Step 3: Add Models with Uniform Interface
-
-Each model must implement `Inference.py` with a `run()` function:
-
-```python
-def run(input_data, top_k=10) -> List[Dict]:
-    """
-    Returns:
-        [{'input': '...', 'predictions': [{'smiles': '...', 'score': 0.95}, ...]}]
-    """
-```
-
-Each model needs its own conda environment (`environment.yml`) to avoid dependency conflicts.
-
-### Step 4: Register in the Benchmark Runner
-
-Update these files to include your task and models:
-
-1. `benchmarks/run_benchmark.py` - Add task and model mappings
-2. `benchmarks/run.sh` - Add conda environment mappings
-3. `benchmarks/setup_envs.sh` - Add environment setup functions
-4. `benchmarks/configs/models.yaml` - Add model configurations
-
-### Step 5: Run Benchmarks with Carbon Tracking
-
-```bash
-# Run a single model
-./benchmarks/run.sh --model <ModelName> --limit 1000 --track_carbon
-
-# Run all models for your task
-./benchmarks/run.sh --model all --limit 1000 --track_carbon
-```
-
-### Step 6: Generate Plots and Report Results
-
-Generate accuracy vs cost plots from your benchmark results:
-
-```bash
-# Generate all plots (carbon, energy, speed) — combined view
-python benchmarks/plot_results.py --task <Task> --combined
-
-# Generate plots for a specific sample count
-python benchmarks/plot_results.py --task <Task> --combined --samples 500
-
-# Single x-axis metric
-python benchmarks/plot_results.py --task <Task> --combined --xaxis emissions_g_co2
-
-# Or use the Claude Code skill
-# /plot <Task>
-```
-
-Plots are saved to `benchmarks/figures/<Task>/`. Then update your task's `README.md` with the results table:
-
-```markdown
-| Model | Params | Metric-1 | Metric-2 | Duration (s) | Energy (Wh) | CO2 (g) | Peak GPU (MB) |
-```
-
----
-
-## Getting Started
+Each task leader is responsible for benchmarking models in their domain.
+Claude Code is the recommended way to do this — it reads the project's
+`CLAUDE.md` files automatically and understands the benchmarking protocol,
+directory structure, and conventions.
 
 ### Prerequisites
 
 - Linux with NVIDIA GPU(s)
 - Conda (Miniconda or Anaconda)
 - Git
+- [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
+  (`npm install -g @anthropic-ai/claude-code`)
 
-### Clone and Setup
+### Quick Start
 
 ```bash
 git clone https://github.com/shuan4638/Carbon4Science.git
 cd Carbon4Science
-
-# Setup environments for a specific task
-cd benchmarks
-./setup_envs.sh            # All retrosynthesis models
-./setup_envs.sh neuralsym  # Single model
+claude
 ```
 
-### Run a Benchmark
+Introduce yourself in the first message:
 
-```bash
-cd benchmarks
+> I'm [name], the task leader for [task]. I need to set up the [task]
+> benchmarking pipeline from scratch. Guide me through the process
+> step by step.
 
-# Single model with carbon tracking
-./run.sh --model neuralsym --limit 100 --track_carbon
+Claude will walk you through the full workflow, using `Retro/` as the
+reference implementation.
 
-# All models
-./run.sh --model all --limit 1000 --track_carbon --output results/benchmark.json
-```
+### What You'll Build
+
+Claude Code will guide you through each of these steps:
+
+1. **Task directory** — `<Task>/` with README, evaluate.py, data/, and model subdirectories
+2. **Evaluation module** — `<Task>/evaluate.py` with your task's metrics and test data loader
+3. **Models** — `<Task>/<Model>/Inference.py` with the uniform `run()` interface, conda environment, and CLAUDE.md for each model
+4. **Benchmark registration** — Your task and models registered in the benchmark runner (`run_benchmark.py`, `run.sh`, `setup_envs.sh`, `models.yaml`)
+5. **Benchmark runs** — All models run with carbon tracking on the same test set and hardware
+6. **Results** — Accuracy vs cost plots and a results table in your task README
+
+### Reference
+
+The `Retro/` task is the complete reference implementation. Key files to study:
+
+- `Retro/evaluate.py` — evaluation module structure
+- `Retro/LocalRetro/Inference.py` — uniform `run()` interface
+- `Retro/LocalRetro/environment.yml` — conda environment spec
+- `benchmarks/configs/models.yaml` — model registration format
+
+### Skills
+
+| Skill | Description |
+|-------|-------------|
+| `/add-model <Task> <ModelName>` | Add a new model to your task |
+| `/benchmark <ModelName>` | Run a carbon-tracked benchmark |
+| `/evaluate <Task>` | Evaluate model predictions |
+| `/plot <Task>` | Generate accuracy vs cost plots |
+
+### Example Prompts
+
+- "Set up my task directory structure following the Retro template"
+- "Write the evaluate.py for MolGen with FCD and validity metrics"
+- "Create the Inference.py for CDVAE following the uniform interface"
+- "Register my models in the benchmark runner"
+- "Run benchmarks for all my models with 1000 samples and carbon tracking"
+- "Generate plots and update my README with the results table"
+- "What does the Retro/LocalRetro/Inference.py look like? I want to follow the same pattern."
 
 ---
 
@@ -222,33 +161,10 @@ Carbon4Science/
 
 ---
 
-## Using Claude Code
-
-This repository is designed to work with [Claude Code](https://claude.ai/code). Each task directory includes a `CLAUDE.md` file with model-specific instructions. Claude Code skills are available:
-
-- `/add-model <Task> <ModelName>` - Step-by-step guide to add a new model
-- `/benchmark <ModelName>` - Run a carbon-tracked benchmark
-- `/evaluate <Task>` - Run evaluation on predictions
-- `/plot <Task>` - Generate accuracy vs cost plots from benchmark results
-
-To get started with Claude Code on your task:
-
-```bash
-cd Carbon4Science
-claude  # Launch Claude Code
-```
-
-Then tell Claude what you want to do, e.g.:
-- "Add a new model called DiffSBDD to MolGen"
-- "Run benchmark for all MatGen models with 1000 samples"
-- "Set up the MLIP evaluation pipeline"
-
----
-
 ## Citation
 
 ```bibtex
-@article{carbon2025,
+@article{carbon2026,
   title={The Carbon Cost of Generative AI for Science},
   author={...},
   journal={...},
