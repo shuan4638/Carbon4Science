@@ -3,7 +3,7 @@
 Standardized Retrosynthesis Benchmark Evaluation Script
 
 This script provides a unified interface for evaluating retrosynthesis models
-with carbon tracking. It supports all models in the Retrosynthesis/ directory.
+with carbon tracking. It supports all models in the Retro/ directory.
 
 Usage:
     python evaluate_retrosynthesis.py --model neuralsym --task inference --runs 3
@@ -25,12 +25,12 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from benchmarks.carbon_tracker import CarbonTracker, aggregate_results, create_comparison_table
-from Retrosynthesis.evaluate import evaluate as retro_evaluate
+from Retro.evaluate import evaluate as retro_evaluate
 
 
 SUPPORTED_MODELS = {
     "neuralsym": {
-        "path": "Retrosynthesis/neuralsym",
+        "path": "Retro/neuralsym",
         "inference_module": "Inference",
         "inference_func": "run",
         "env": "neuralsym",
@@ -38,7 +38,7 @@ SUPPORTED_MODELS = {
         "requires_init": False,
     },
     "LocalRetro": {
-        "path": "Retrosynthesis/LocalRetro",
+        "path": "Retro/LocalRetro",
         "inference_module": "Inference",
         "inference_func": "run",
         "env": "rdenv",
@@ -46,7 +46,7 @@ SUPPORTED_MODELS = {
         "requires_init": False,
     },
     "RetroBridge": {
-        "path": "Retrosynthesis/RetroBridge",
+        "path": "Retro/RetroBridge",
         "inference_module": "Inference",
         "inference_func": "run",
         "env": "retrobridge",
@@ -54,7 +54,7 @@ SUPPORTED_MODELS = {
         "requires_init": False,
     },
     "Chemformer": {
-        "path": "Retrosynthesis/Chemformer",
+        "path": "Retro/Chemformer",
         "inference_module": "Inference",
         "inference_func": "run",
         "env": "chemformer",
@@ -63,7 +63,7 @@ SUPPORTED_MODELS = {
         "init_func": "load_model",
     },
     "RSGPT": {
-        "path": "Retrosynthesis/RSGPT",
+        "path": "Retro/RSGPT",
         "inference_module": "inference",
         "inference_func": "run",
         "env": "gpt",
@@ -205,7 +205,7 @@ def run_inference_benchmark(
             if (i + batch_size) % 500 == 0:
                 print(f"  Processed {min(i + batch_size, len(products))}/{len(products)}")
 
-    # Calculate accuracy using canonical evaluator from Retrosynthesis.evaluate
+    # Calculate accuracy using canonical evaluator from Retro.evaluate
     test_cases = [{'ground_truth': gt} for gt in ground_truth]
     accuracy = retro_evaluate(all_results, test_cases)
     print(f"\nAccuracy: Top-1={accuracy['top_1']:.2%}, Top-10={accuracy['top_10']:.2%}")

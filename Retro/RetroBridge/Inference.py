@@ -260,28 +260,35 @@ def run(
         p_edge_index = p_edge_index.to(_device)
         p_edge_attr = p_edge_attr.to(_device)
 
-        # Create batch of samples
-        dataset, batch = [], []
-        idx_offset = 0
-        for i in range(top_k):
-            data = Data(idx=i, p_x=p_x, p_edge_index=p_edge_index.clone(), p_edge_attr=p_edge_attr, p_smiles=input_smiles)
-            data.p_edge_index += idx_offset
-            dataset.append(data)
-            batch.append(torch.ones_like(data.p_x[:, 0]).to(torch.long) * i)
-            idx_offset += len(data.p_x)
+        # Sample in chunks to avoid GPU memory/compute blowup
+        # (attention is O(n^2) on the batched graph, so large top_k is very expensive)
+        chunk_size = 10
+        all_molecule_list = []
+        for chunk_start in range(0, top_k, chunk_size):
+            chunk_k = min(chunk_size, top_k - chunk_start)
+            dataset, batch = [], []
+            idx_offset = 0
+            for i in range(chunk_k):
+                data = Data(idx=chunk_start + i, p_x=p_x,
+                            p_edge_index=p_edge_index.clone(),
+                            p_edge_attr=p_edge_attr, p_smiles=input_smiles)
+                data.p_edge_index += idx_offset
+                dataset.append(data)
+                batch.append(torch.ones_like(data.p_x[:, 0]).to(torch.long) * i)
+                idx_offset += len(data.p_x)
 
-        data, _ = RetroBridgeDataset.collate(dataset)
-        data.batch = torch.concat(batch)
+            data, _ = RetroBridgeDataset.collate(dataset)
+            data.batch = torch.concat(batch)
 
-        # Run sampling
-        with torch.no_grad():
-            molecule_list = _model.sample_chain_no_true_no_save(
-                data, batch_size=top_k
-            )
+            with torch.no_grad():
+                molecule_list = _model.sample_chain_no_true_no_save(
+                    data, batch_size=chunk_k
+                )
+            all_molecule_list.extend(molecule_list)
 
         # Convert to SMILES and format predictions
         formatted_preds = []
-        for mol_data in molecule_list:
+        for mol_data in all_molecule_list:
             rdmol, _ = build_molecule(mol_data[0], mol_data[1], _dataset_info.atom_decoder, return_n_dummy_atoms=True)
             smi = Chem.MolToSmiles(rdmol)
             formatted_preds.append({
@@ -319,7 +326,7 @@ if __name__ == "__main__":
     print("Running retrosynthesis prediction...")
     print("-" * 50)
 
-    results = run(smiles, n_samples=5, n_steps=500)
+    results = run(smiles, top_k=5, n_steps=500)
 
     print("Predicted reactants:")
     for i, r in enumerate(results, 1):

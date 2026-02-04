@@ -1,5 +1,5 @@
 {
-  "task": "Retrosynthesis",
+  "task": "Retro",
   "model": "LocalRetro",
   "num_samples": 1000,
   "top_k": 50,
@@ -13,14 +13,14 @@
   "accuracy": {
     "top_1": 0.525,
     "top_5": 0.839,
-    "top_10": 0.904,
-    "top_50": 0.949
+    "top_10": 0.923,
+    "top_50": 0.977
   },
   "correct": {
     "top_1": 525,
     "top_5": 839,
-    "top_10": 904,
-    "top_50": 949
+    "top_10": 923,
+    "top_50": 977
   },
   "carbon": {
     "start_time": "2026-02-03T17:49:37.301875",
@@ -33,7 +33,7 @@
     "ram_energy_wh": 0.0505,
     "peak_gpu_memory_mb": 154.2,
     "peak_cpu_memory_mb": 1236.7,
-    "project_name": "LocalRetro_Retrosynthesis_benchmark",
+    "project_name": "LocalRetro_Retro_benchmark",
     "model_name": "LocalRetro",
     "task": "inference",
     "hardware": {

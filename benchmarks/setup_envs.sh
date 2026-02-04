@@ -35,14 +35,14 @@ setup_retrobridge() {
     echo "Setting up RetroBridge environment..."
     conda create --name retrobridge python=3.9 rdkit=2023.09.5 -c conda-forge -y
     conda activate retrobridge
-    pip install -r ../Retrosynthesis/RetroBridge/requirements.txt
+    pip install -r ../Retro/RetroBridge/requirements.txt
     conda deactivate
     echo "✓ RetroBridge environment ready"
 }
 
 setup_chemformer() {
     echo "Setting up Chemformer environment..."
-    cd ../Retrosynthesis/Chemformer
+    cd ../Retro/Chemformer
     conda env create -f env-dev.yml
     conda activate chemformer
     pip install poetry
@@ -54,7 +54,7 @@ setup_chemformer() {
 
 setup_rsgpt() {
     echo "Setting up RSGPT environment..."
-    cd ../Retrosynthesis/RSGPT
+    cd ../Retro/RSGPT
     conda env create -f environment.yml
     cd -
     echo "✓ RSGPT environment ready"

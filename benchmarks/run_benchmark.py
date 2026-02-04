@@ -3,14 +3,14 @@
 Unified Benchmark Runner for Carbon4Science
 
 Dynamically loads task-specific evaluation modules from each task directory.
-Each task (Retrosynthesis, MolGen, MatGen) defines its own:
+Each task (Retro, MolGen, MatGen) defines its own:
   - METRICS: Available metrics for the task
   - load_test_data(): Load test dataset
   - evaluate(): Compute metrics from predictions
 
 Usage:
-    python run_benchmark.py --task Retrosynthesis --model LocalRetro --track_carbon
-    python run_benchmark.py --task Retrosynthesis --model neuralsym --limit 500
+    python run_benchmark.py --task Retro --model LocalRetro --track_carbon
+    python run_benchmark.py --task Retro --model neuralsym --limit 500
 """
 
 import argparse
@@ -27,14 +27,14 @@ sys.path.insert(0, str(ROOT_DIR))
 
 # Task to evaluation module mapping
 TASKS = {
-    "Retrosynthesis": {
-        "eval_module": "Retrosynthesis.evaluate",
+    "Retro": {
+        "eval_module": "Retro.evaluate",
         "models": {
-            "neuralsym": "Retrosynthesis.neuralsym.Inference",
-            "LocalRetro": "Retrosynthesis.LocalRetro.Inference",
-            "RetroBridge": "Retrosynthesis.RetroBridge.Inference",
-            "Chemformer": "Retrosynthesis.Chemformer.Inference",
-            "RSGPT": "Retrosynthesis.RSGPT.inference",
+            "neuralsym": "Retro.neuralsym.Inference",
+            "LocalRetro": "Retro.LocalRetro.Inference",
+            "RetroBridge": "Retro.RetroBridge.Inference",
+            "Chemformer": "Retro.Chemformer.Inference",
+            "RSGPT": "Retro.RSGPT.inference",
         }
     },
     "MolGen": {
@@ -161,7 +161,7 @@ def run_benchmark(
     Run benchmark for a model on a task.
 
     Args:
-        task_name: Task name (Retrosynthesis, MolGen, MatGen)
+        task_name: Task name (Retro, MolGen, MatGen)
         model_name: Model name within the task
         limit: Limit number of test samples (optional)
         top_k: Number of predictions per sample
@@ -322,8 +322,8 @@ def main():
     )
 
     # Core arguments
-    parser.add_argument("--task", type=str, default="Retrosynthesis",
-                        help=f"Task: {', '.join(TASKS.keys())} (default: Retrosynthesis)")
+    parser.add_argument("--task", type=str, default="Retro",
+                        help=f"Task: {', '.join(TASKS.keys())} (default: Retro)")
     parser.add_argument("--model", type=str, required=True,
                         help="Model name within the task")
     parser.add_argument("--metrics", type=str, nargs="+",

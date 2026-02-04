@@ -31,7 +31,7 @@ When the user invokes this skill:
    conda activate <env_name>
    ```
 
-   Known environment mappings (Retrosynthesis):
+   Known environment mappings (Retro):
    - neuralsym -> `neuralsym`
    - LocalRetro -> `rdenv`
    - RetroBridge -> `retrobridge`
@@ -47,7 +47,7 @@ When the user invokes this skill:
        --model <model_name> \
        --limit <N> \
        --track_carbon \
-       --output benchmarks/results/<model>_<N>.json
+       --output benchmarks/results/<Task>/<model>_<N>.json
    ```
 
 4. **Report results:**
@@ -56,8 +56,15 @@ When the user invokes this skill:
    - Note the output file location
    - Update the task README.md with results
 
+5. **Generate plots:**
+   After all models have been benchmarked, generate accuracy vs cost plots:
+   ```bash
+   python benchmarks/plot_results.py --task <Task> --combined
+   ```
+   Or use the `/plot` skill. See `.claude/skills/plot.md` for details.
+
 ## Notes
 - Always run from the repository root directory
-- Results are saved to `benchmarks/results/`
+- Results are saved to `benchmarks/results/<Task>/<model>_<N>.json`
 - Use `--limit` for quick tests to avoid long runtimes
-- For parallel GPU execution, use `CUDA_VISIBLE_DEVICES=<N>` prefix
+- For parallel GPU execution on different models, use `CUDA_VISIBLE_DEVICES=<N>` prefix to assign each model to a different GPU

@@ -1,0 +1,50 @@
+{
+  "task": "Retro",
+  "model": "LocalRetro",
+  "num_samples": 500,
+  "top_k": 50,
+  "model_params": 8645410,
+  "metrics": [
+    "top_1",
+    "top_5",
+    "top_10",
+    "top_50"
+  ],
+  "accuracy": {
+    "top_1": 0.532,
+    "top_5": 0.86,
+    "top_10": 0.923,
+    "top_50": 0.977
+  },
+  "correct": {
+    "top_1": 266,
+    "top_5": 430,
+    "top_10": 461,
+    "top_50": 488
+  },
+  "carbon": {
+    "start_time": "2026-02-02T22:19:39.246523",
+    "end_time": "2026-02-02T22:22:09.042447",
+    "duration_seconds": 149.79592442512512,
+    "energy_wh": 11.872,
+    "emissions_g_co2": 4.7488,
+    "gpu_energy_wh": 7.5239,
+    "cpu_energy_wh": 4.3295,
+    "ram_energy_wh": 0.0185,
+    "peak_gpu_memory_mb": 155.4,
+    "peak_cpu_memory_mb": 1216.7,
+    "project_name": "LocalRetro_Retro_benchmark",
+    "model_name": "LocalRetro",
+    "task": "inference",
+    "hardware": {
+      "gpu_model": "NVIDIA RTX 5000 Ada Generation",
+      "gpu_count": 8,
+      "gpu_memory_gb": 31.9921875,
+      "cpu_model": "INTEL(R) XEON(R) PLATINUM 8558",
+      "cpu_cores": 192,
+      "ram_gb": 503.0359344482422,
+      "cuda_version": "Driver 580.82.09",
+      "platform": "Linux-5.14.0-570.17.1.el9_6.x86_64-x86_64-with-glibc2.34"
+    }
+  }
+}

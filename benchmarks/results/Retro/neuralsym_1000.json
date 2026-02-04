@@ -1,5 +1,5 @@
 {
-  "task": "Retrosynthesis",
+  "task": "Retro",
   "model": "neuralsym",
   "num_samples": 1000,
   "top_k": 50,
@@ -33,7 +33,7 @@
     "ram_energy_wh": 0.0173,
     "peak_gpu_memory_mb": 504.2,
     "peak_cpu_memory_mb": 883.7,
-    "project_name": "neuralsym_Retrosynthesis_benchmark",
+    "project_name": "neuralsym_Retro_benchmark",
     "model_name": "neuralsym",
     "task": "inference",
     "hardware": {

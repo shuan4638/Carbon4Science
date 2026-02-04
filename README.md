@@ -17,10 +17,44 @@ We present **The Carbon Cost of Generative AI for Science**, a benchmarking fram
 
 | Task | Directory | Leader | Status |
 |------|-----------|--------|--------|
-| Retrosynthesis | `Retrosynthesis/` | Shuan Chen | In Progress |
+| Retrosynthesis | `Retro/` | Shuan Chen | Complete |
 | Molecule Generation | `MolGen/` | Gunwook Nam | Planned |
 | Material Generation | `MatGen/` | Junkil Park | Planned |
 | ML Interatomic Potentials | `MLIP/` | Junyoung Choi | Planned |
+
+---
+
+## Benchmarking Methodology
+
+All tasks follow the same standardized protocol to ensure fair, reproducible comparisons:
+
+1. **Same dataset, same metrics, same hardware** — Every model in a task runs on the same test set, is evaluated with the same metrics, and uses the same GPU hardware (reported in results JSON).
+2. **Uniform `Inference.py` interface** — Every model exposes a `run()` function with a standardized return format so the benchmark runner can orchestrate any model identically.
+3. **Carbon tracking via CodeCarbon** — Energy consumption (Wh), CO2 emissions (g), and wall-clock time are recorded automatically using our `CarbonTracker` wrapper around [CodeCarbon](https://codecarbon.io/).
+4. **Environment isolation** — Each model has its own conda environment to prevent dependency conflicts. The runner script (`run.sh`) activates the correct environment automatically.
+5. **Normalized comparison** — Cost metrics are normalized to a fixed sample count (e.g., per 500 samples) so models evaluated on different subset sizes can be compared fairly.
+6. **Structured JSON results** — Every benchmark run produces a JSON file with accuracy, carbon, hardware, and metadata fields, enabling automated analysis and plotting.
+7. **Accuracy vs Cost visualization** — Results are plotted as accuracy (y-axis) vs cost metric (x-axis, log-scale) to reveal the efficiency frontier across models.
+
+---
+
+## Retrosynthesis Results
+
+Five models benchmarked on 1,000 samples from the USPTO-50K test set, evaluated on top-k exact-match accuracy with full carbon tracking.
+
+**Hardware:** NVIDIA RTX 5000 Ada Generation, Intel Xeon Platinum 8558, 503 GB RAM
+
+![Retrosynthesis: Accuracy vs Carbon Cost](benchmarks/figures/Retro/accuracy_vs_carbon_combined_500.png)
+
+| Model | Params | Top-1 | Top-10 | Top-50 | Duration (s) | Energy (Wh) | CO2 (g) | Peak GPU (MB) |
+|-------|--------|-------|--------|--------|--------------|-------------|---------|---------------|
+| neuralsym | 32.5M | 43.0% | 72.4% | 74.0% | 192 | 21.2 | 8.5 | 504 |
+| LocalRetro | 8.6M | 52.5% | 92.3% | 97.7% | 402 | 41.3 | 16.5 | 154 |
+| Chemformer | 44.7M | 88.0% | 90.8% | 91.2% | 16,911 | 1,378 | 551 | 207 |
+| RetroBridge | 4.6M | 22.1% | 44.5% | 51.7% | 61,974 | 4,566 | 1,966 | 479 |
+| RSGPT | ~1.6B | 77.5% | 97.8% | 98.7% | 49,782 | 3,787 | 1,515 | 6,950 |
+
+**Key insight:** LocalRetro achieves 52.5% top-1 accuracy (97.7% top-50) using only 8.5 g CO2 and 154 MB GPU memory — **65x less carbon** than RSGPT and **45x less** than the most expensive model (RetroBridge), while delivering competitive top-k coverage. Chemformer leads on top-1 accuracy (88.0%) but at 65x the carbon cost of LocalRetro. The largest model (RSGPT, ~1.6B params) achieves the best top-50 accuracy (98.7%) but consumes **178x more carbon** than LocalRetro for only a 1 percentage point improvement.
 
 ---
 
@@ -47,7 +81,7 @@ Your task directory should follow this structure:
 └── ...
 ```
 
-See `Retrosynthesis/` for a complete reference implementation.
+See `Retro/` for a complete reference implementation.
 
 ### Step 2: Implement the Evaluation Module
 
@@ -98,9 +132,25 @@ Update these files to include your task and models:
 ./benchmarks/run.sh --model all --limit 1000 --track_carbon
 ```
 
-### Step 6: Report Results
+### Step 6: Generate Plots and Report Results
 
-Update your task's `README.md` with the results table:
+Generate accuracy vs cost plots from your benchmark results:
+
+```bash
+# Generate all plots (carbon, energy, speed) — combined view
+python benchmarks/plot_results.py --task <Task> --combined
+
+# Generate plots for a specific sample count
+python benchmarks/plot_results.py --task <Task> --combined --samples 500
+
+# Single x-axis metric
+python benchmarks/plot_results.py --task <Task> --combined --xaxis emissions_g_co2
+
+# Or use the Claude Code skill
+# /plot <Task>
+```
+
+Plots are saved to `benchmarks/figures/<Task>/`. Then update your task's `README.md` with the results table:
 
 ```markdown
 | Model | Params | Metric-1 | Metric-2 | Duration (s) | Energy (Wh) | CO2 (g) | Peak GPU (MB) |
@@ -158,7 +208,7 @@ Carbon4Science/
 │   ├── configs/             # Model configs, hardware specs
 │   └── results/             # Benchmark outputs (JSON)
 │
-├── Retrosynthesis/          # Retrosynthesis task (Shuan Chen)
+├── Retro/                   # Retrosynthesis task (Shuan Chen)
 │   ├── neuralsym/           # Template-based, Nature 2018
 │   ├── LocalRetro/          # MPNN + attention, JACS Au 2021
 │   ├── RetroBridge/         # Markov bridges, ICLR 2024
@@ -179,6 +229,7 @@ This repository is designed to work with [Claude Code](https://claude.ai/code). 
 - `/add-model <Task> <ModelName>` - Step-by-step guide to add a new model
 - `/benchmark <ModelName>` - Run a carbon-tracked benchmark
 - `/evaluate <Task>` - Run evaluation on predictions
+- `/plot <Task>` - Generate accuracy vs cost plots from benchmark results
 
 To get started with Claude Code on your task:
 
@@ -201,7 +252,7 @@ Then tell Claude what you want to do, e.g.:
   title={The Carbon Cost of Generative AI for Science},
   author={...},
   journal={...},
-  year={2025}
+  year={2026}
 }
 ```
 

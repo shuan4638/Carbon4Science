@@ -26,7 +26,7 @@ def run(input_data, top_k: int = 10) -> List[Dict]:
 
 Each model has its own conda environment. **NEVER** suggest installing packages globally or mixing environments.
 
-**Retrosynthesis:**
+**Retro (Retrosynthesis):**
 
 | Model | Environment Name |
 |-------|-----------------|
@@ -89,6 +89,100 @@ Each task defines its own `evaluate.py` module with:
 
 The benchmark runner dynamically loads the correct evaluator based on the `--task` flag.
 
+### Rule 9: Benchmarking Workflow
+
+When a task leader asks to benchmark their task end-to-end, follow these phases in order:
+
+1. **Setup** — Create task directory structure (`<Task>/`, `<Task>/data/`, model subdirectories)
+2. **Evaluate** — Implement `<Task>/evaluate.py` with `METRICS`, `load_test_data()`, and `evaluate()`
+3. **Models** — For each model, implement `Inference.py` with the uniform `run()` interface, create `environment.yml`, and write `CLAUDE.md`
+4. **Register** — Add all models to `benchmarks/run_benchmark.py` (TASKS dict), `benchmarks/run.sh` (MODEL_ENVS), `benchmarks/setup_envs.sh`, and `benchmarks/configs/models.yaml`
+5. **Run** — Execute benchmarks: `./benchmarks/run.sh --model all --limit 1000 --track_carbon`
+6. **Plot** — Generate visualization: `python benchmarks/plot_results.py --task <Task> --combined`
+7. **Report** — Update `<Task>/README.md` and the root `README.md` with results table and figure
+
+### Rule 10: Plot Generation
+
+Use `benchmarks/plot_results.py` to generate accuracy vs cost plots.
+
+**Commands:**
+```bash
+# All three plots (carbon, energy, speed) in combined view
+python benchmarks/plot_results.py --task <Task> --combined
+
+# Specific sample count
+python benchmarks/plot_results.py --task <Task> --combined --samples 500
+
+# Single x-axis metric with custom output
+python benchmarks/plot_results.py --task <Task> --combined --xaxis emissions_g_co2 -o my_plot.png
+
+# Per-metric panel view (one subplot per accuracy metric)
+python benchmarks/plot_results.py --task <Task>
+```
+
+**Adding new models:** When adding a model to a new or existing task, add an entry to `MODEL_STYLES` in `plot_results.py`:
+```python
+MODEL_STYLES = {
+    "MyModel": {"color": "#hex", "marker": "o", "params": "10M", "year": 2024, "venue": "NeurIPS"},
+}
+```
+
+**Output:** Plots are saved to `benchmarks/figures/<Task>/`.
+
+### Results JSON Schema
+
+Every benchmark run produces a JSON file following this structure:
+
+```json
+{
+  "task": "Retro",
+  "model": "LocalRetro",
+  "num_samples": 1000,
+  "top_k": 50,
+  "model_params": 8645410,
+  "metrics": ["top_1", "top_5", "top_10", "top_50"],
+  "accuracy": {
+    "top_1": 0.525,
+    "top_5": 0.839,
+    "top_10": 0.923,
+    "top_50": 0.977
+  },
+  "correct": {
+    "top_1": 525,
+    "top_5": 839,
+    "top_10": 923,
+    "top_50": 977
+  },
+  "carbon": {
+    "start_time": "2026-02-03T17:49:37.301875",
+    "end_time": "2026-02-03T17:56:18.823578",
+    "duration_seconds": 401.52,
+    "energy_wh": 41.31,
+    "emissions_g_co2": 16.52,
+    "gpu_energy_wh": 19.06,
+    "cpu_energy_wh": 22.20,
+    "ram_energy_wh": 0.05,
+    "peak_gpu_memory_mb": 154.2,
+    "peak_cpu_memory_mb": 1236.7,
+    "project_name": "LocalRetro_Retro_benchmark",
+    "model_name": "LocalRetro",
+    "task": "inference",
+    "hardware": {
+      "gpu_model": "NVIDIA RTX 5000 Ada Generation",
+      "gpu_count": 8,
+      "gpu_memory_gb": 31.99,
+      "cpu_model": "INTEL(R) XEON(R) PLATINUM 8558",
+      "cpu_cores": 192,
+      "ram_gb": 503.04,
+      "cuda_version": "Driver 580.82.09",
+      "platform": "Linux-5.14.0-..."
+    }
+  }
+}
+```
+
+Results are saved to `benchmarks/results/<Task>/<model>_<N>.json`.
+
 ---
 
 ## Project Overview
@@ -96,7 +190,7 @@ The benchmark runner dynamically loads the correct evaluator based on the `--tas
 **Carbon4Science** benchmarks both predictive performance AND carbon efficiency of generative AI models for scientific discovery.
 
 **Four Tasks:**
-1. **Retrosynthesis** (`Retrosynthesis/`) - Predict reactants from product molecules
+1. **Retrosynthesis** (`Retro/`) - Predict reactants from product molecules
 2. **Molecule Generation** (`MolGen/`) - Generate novel molecules
 3. **Material Generation** (`MatGen/`) - Generate crystal structures
 4. **ML Interatomic Potentials** (`MLIP/`) - Predict atomic forces and energies
@@ -106,7 +200,7 @@ The benchmark runner dynamically loads the correct evaluator based on the `--tas
 ```
 Carbon4Science/
 ├── benchmarks/        # Shared infrastructure (runner, carbon tracker, configs)
-├── Retrosynthesis/    # 5 models: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT
+├── Retro/             # 5 models: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT
 ├── MolGen/            # Molecule generation models (planned)
 ├── MatGen/            # Material generation models (planned)
 └── MLIP/              # ML interatomic potential models (planned)
@@ -120,7 +214,7 @@ All models provide a `run()` function in `Inference.py`:
 
 ```python
 # Example: Retrosynthesis
-from Retrosynthesis.LocalRetro.Inference import run
+from Retro.LocalRetro.Inference import run
 results = run("CCO", top_k=10)
 
 # Example: MolGen (when implemented)

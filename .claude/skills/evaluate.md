@@ -9,7 +9,7 @@ Run task-specific evaluation on predictions.
 
 ## Examples
 ```
-/evaluate Retrosynthesis
+/evaluate Retro
 /evaluate MolGen
 /evaluate MatGen
 /evaluate MLIP
@@ -19,13 +19,13 @@ Run task-specific evaluation on predictions.
 
 When the user invokes this skill:
 
-### For Retrosynthesis
+### For Retro (Retrosynthesis)
 
 1. **Available metrics:** `top_1`, `top_5`, `top_10`, `top_50`
-2. **Test data:** `Retrosynthesis/data/test_demapped.csv`
+2. **Test data:** `Retro/data/test_demapped.csv`
 3. **Run evaluation:**
    ```python
-   from Retrosynthesis.evaluate import load_test_data, evaluate, METRICS
+   from Retro.evaluate import load_test_data, evaluate, METRICS
 
    test_cases = load_test_data(limit=100)
    predictions = [model.run(tc['product'], top_k=50) for tc in test_cases]
@@ -64,7 +64,7 @@ When the user invokes this skill:
 
 ## Test Data Locations
 
-- Retrosynthesis: `Retrosynthesis/data/test_demapped.csv`
+- Retro: `Retro/data/test_demapped.csv`
 - MolGen: `MolGen/data/` (to be added)
 - MatGen: `MatGen/data/` (to be added)
 - MLIP: `MLIP/data/` (to be added)

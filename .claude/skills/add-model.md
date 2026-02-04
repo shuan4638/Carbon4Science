@@ -9,7 +9,7 @@ Guide for adding a new model to the benchmark.
 
 ## Examples
 ```
-/add-model Retrosynthesis MyNewModel
+/add-model Retro MyNewModel
 /add-model MolGen VAE
 /add-model MatGen CDVAE
 /add-model MLIP MACE
@@ -63,7 +63,7 @@ def run(num_samples: int = 100, **kwargs) -> List[Dict]:
 ### Step 3: Create CLAUDE.md for the Model
 
 Include: project overview, environment setup, commands, architecture, key files.
-See `Retrosynthesis/LocalRetro/CLAUDE.md` for a reference.
+See `Retro/LocalRetro/CLAUDE.md` for a reference.
 
 ### Step 4: Create Conda Environment
 ```yaml
@@ -120,6 +120,23 @@ setup_mymodel() {
 ./benchmarks/run.sh --model MyNewModel --limit 1000 --track_carbon
 ```
 
+### Step 7: Register Model in Plot Script
+
+Add a style entry to `MODEL_STYLES` in `benchmarks/plot_results.py`:
+
+```python
+MODEL_STYLES = {
+    # ... existing models ...
+    "MyNewModel": {
+        "color": "#FF5722",   # Choose a distinct hex color
+        "marker": "v",        # Choose a distinct marker (o, s, D, ^, P, *, v, etc.)
+        "params": "10M",      # Parameter count string
+        "year": 2024,         # Publication year
+        "venue": "NeurIPS",   # Publication venue
+    },
+}
+```
+
 ## Checklist
 - [ ] `Inference.py` with uniform interface
 - [ ] `environment.yml` with dependencies
@@ -127,5 +144,6 @@ setup_mymodel() {
 - [ ] Model registered in `run_benchmark.py`
 - [ ] Environment added to `run.sh` and `setup_envs.sh`
 - [ ] Config added to `benchmarks/configs/models.yaml`
+- [ ] Model style added to `benchmarks/plot_results.py` `MODEL_STYLES`
 - [ ] Quick test passes with `--limit 10`
 - [ ] Results added to task README.md

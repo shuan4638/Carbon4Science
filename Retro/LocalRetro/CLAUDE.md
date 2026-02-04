@@ -97,7 +97,7 @@ Pre-trained model: `models/LocalRetro_USPTO_50K.pth`
 ## User API Example
 
 ```python
-from Retrosynthesis import LocalRetro
+from Retro.LocalRetro.Retrosynthesis import LocalRetro
 
 model = LocalRetro()
 results = model.retrosnythesis("CCO", top_k=10)  # Returns DataFrame with predicted reactants

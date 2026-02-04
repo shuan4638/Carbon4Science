@@ -29,7 +29,7 @@ Use [GitHub Issues](https://github.com/shuan4638/Carbon4Science/issues) to repor
 Create a subdirectory under the appropriate task folder:
 
 ```
-Retrosynthesis/YourModel/
+Retro/YourModel/
 MolGen/YourModel/
 MatGen/YourModel/
 ```
@@ -118,7 +118,7 @@ dependencies:
 ```bash
 setup_yourmodel() {
     echo "Setting up YourModel environment..."
-    cd ../Retrosynthesis/YourModel
+    cd ../Retro/YourModel
     conda env create -f environment.yml
     cd -
     echo "✓ YourModel environment ready"
@@ -149,7 +149,7 @@ declare -A MODEL_ENVS=(
 MODELS = {
     # ... existing models ...
     "YourModel": {
-        "module": "Retrosynthesis.YourModel.Inference",
+        "module": "Retro.YourModel.Inference",
         "requires_init": False,  # Set True if you need load_model()
     },
 }
@@ -160,9 +160,9 @@ MODELS = {
 ```yaml
 YourModel:
   env: yourmodel
-  checkpoint: Retrosynthesis/YourModel/models/checkpoint.pth
+  checkpoint: Retro/YourModel/models/checkpoint.pth
   checkpoint_url: https://example.com/checkpoint.pth  # or null
-  data_dir: Retrosynthesis/YourModel/data
+  data_dir: Retro/YourModel/data
   gpu_memory_mb: 4000  # Approximate GPU memory needed
 ```
 
@@ -189,7 +189,7 @@ cat results/test_output.json  # Check format matches specification
 
 Your PR should include:
 
-- [ ] Model implementation in `Retrosynthesis/YourModel/`
+- [ ] Model implementation in `Retro/YourModel/`
 - [ ] `Inference.py` with uniform interface
 - [ ] `environment.yml` or `requirements.txt`
 - [ ] Updates to `setup_envs.sh`, `run.sh`, `run_benchmark.py`, `models.yaml`
@@ -267,7 +267,7 @@ Submit a PR with:
 
 | Task | Lead | Status |
 |------|------|--------|
-| Retrosynthesis | @shuan4638 | Active |
+| Retro | @shuan4638 | Active |
 | Molecule Generation | TBD | Planned |
 | Material Generation | TBD | Planned |
 
@@ -275,7 +275,7 @@ Submit a PR with:
 
 ## Common Issues
 
-### "ModuleNotFoundError: No module named 'Retrosynthesis'"
+### "ModuleNotFoundError: No module named 'Retro'"
 
 Make sure you're running from the repository root:
 

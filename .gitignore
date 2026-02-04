@@ -67,7 +67,7 @@ Thumbs.db
 *.mdb
 
 # Exception: allow test data in task data directories
-!Retrosynthesis/data/*.pickle
+!Retro/data/*.pickle
 !MolGen/data/*.pickle
 !MatGen/data/*.pickle
 

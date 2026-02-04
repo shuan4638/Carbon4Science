@@ -38,7 +38,7 @@ Pre-trained models must be downloaded separately. See `configs/models.yaml` for 
 
 ```bash
 # RetroBridge
-wget https://zenodo.org/record/10688201/files/retrobridge.ckpt -O Retrosynthesis/RetroBridge/models/retrobridge.ckpt
+wget https://zenodo.org/record/10688201/files/retrobridge.ckpt -O Retro/RetroBridge/models/retrobridge.ckpt
 
 # RSGPT
 # Download from https://sandbox.zenodo.org/records/203391
