@@ -35,6 +35,8 @@ TASKS = {
             "RetroBridge": "Retro.RetroBridge.Inference",
             "Chemformer": "Retro.Chemformer.Inference",
             "RSGPT": "Retro.RSGPT.inference",
+            "RSMILES_1x": "Retro.RSMILES.Inference",
+            "RSMILES_20x": "Retro.RSMILES.Inference",
         }
     },
     "MolGen": {
@@ -91,7 +93,7 @@ def get_model_run_func(task_name: str, model_name: str):
     module_name = models[model_name]
     module = importlib.import_module(module_name)
 
-    # If the module has a load_model() function (e.g. Chemformer), call it first
+    # If the module has a load_model() function (e.g. Chemformer, RSMILES), call it first
     if hasattr(module, 'load_model') and callable(module.load_model):
         config = _load_model_config(model_name)
         checkpoint = config.get('checkpoint')
@@ -106,6 +108,10 @@ def get_model_run_func(task_name: str, model_name: str):
             kwargs['model_path'] = checkpoint
         if vocabulary:
             kwargs['vocabulary_path'] = vocabulary
+        # Pass augmentation_factor if specified in config (e.g. RSMILES_1x vs 20x)
+        augmentation_factor = config.get('augmentation_factor')
+        if augmentation_factor is not None:
+            kwargs['augmentation_factor'] = augmentation_factor
         if kwargs:
             module.load_model(**kwargs)
 
@@ -155,6 +161,7 @@ def run_benchmark(
     track_carbon: bool = False,
     data_path: Optional[str] = None,
     output_path: Optional[str] = None,
+    save_predictions: Optional[str] = None,
     verbose: bool = True,
 ) -> Dict[str, Any]:
     """
@@ -312,6 +319,20 @@ def run_benchmark(
         if verbose:
             print(f"\nResults saved to: {output_path}")
 
+    # Save raw predictions
+    if save_predictions:
+        pred_data = []
+        for pred, tc in zip(predictions, test_cases):
+            pred_data.append({
+                "input": tc["product"],
+                "ground_truth": tc["ground_truth"],
+                "predictions": pred.get("predictions", []) if isinstance(pred, dict) else pred,
+            })
+        with open(save_predictions, 'w') as f:
+            json.dump(pred_data, f, indent=2, default=str)
+        if verbose:
+            print(f"Predictions saved to: {save_predictions}")
+
     return results
 
 
@@ -342,6 +363,8 @@ def main():
                         help="Output JSON file for results")
     parser.add_argument("--track_carbon", action="store_true",
                         help="Track carbon emissions")
+    parser.add_argument("--save_predictions", type=str,
+                        help="Path to save raw predictions JSON")
 
     # Info options
     parser.add_argument("--list_tasks", action="store_true",
@@ -389,6 +412,7 @@ def main():
         track_carbon=args.track_carbon,
         data_path=args.data,
         output_path=args.output,
+        save_predictions=args.save_predictions,
         verbose=True,
     )
 

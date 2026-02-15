@@ -40,21 +40,28 @@ All tasks follow the same standardized protocol to ensure fair, reproducible com
 
 ## Retrosynthesis Results
 
-Five models benchmarked on 1,000 samples from the USPTO-50K test set, evaluated on top-k exact-match accuracy with full carbon tracking.
+Seven models benchmarked on the full USPTO-50K test set (~5,000 samples), evaluated on top-k exact-match accuracy with full carbon tracking. Costs are averaged per 500 samples for fair comparison.
 
 **Hardware:** NVIDIA RTX 5000 Ada Generation, Intel Xeon Platinum 8558, 503 GB RAM
 
-![Retrosynthesis: Accuracy vs Carbon Cost](benchmarks/figures/Retro/accuracy_vs_carbon_combined_500.png)
+![Retrosynthesis: Accuracy vs Carbon Cost](benchmarks/figures/Retro/accuracy_vs_carbon_combined.png)
 
-| Model | Params | Top-1 | Top-10 | Top-50 | Duration (s) | Energy (Wh) | CO2 (g) | Peak GPU (MB) |
-|-------|--------|-------|--------|--------|--------------|-------------|---------|---------------|
-| neuralsym | 32.5M | 43.0% | 72.4% | 74.0% | 192 | 21.2 | 8.5 | 504 |
-| LocalRetro | 8.6M | 52.5% | 92.3% | 97.7% | 402 | 41.3 | 16.5 | 154 |
-| Chemformer | 44.7M | 88.0% | 90.8% | 91.2% | 16,911 | 1,378 | 551 | 207 |
-| RetroBridge | 4.6M | 22.1% | 44.5% | 51.7% | 61,974 | 4,566 | 1,966 | 479 |
-| RSGPT | ~1.6B | 77.5% | 97.8% | 98.7% | 49,782 | 3,787 | 1,515 | 6,950 |
+| Model | Params | Top-1 | Top-5 | Top-10 | Top-50 | Time/500 (s) | Energy/500 (Wh) | CO2/500 (g) | Peak GPU (MB) |
+|-------|--------|-------|-------|--------|--------|-------------|----------------|------------|---------------|
+| neuralsym | 32.5M | 43.0% | 67.7% | 72.8% | 74.8% | 128 | 7.5 | 3.5 | 504 |
+| LocalRetro | 8.6M | 52.8% | 85.0% | 91.5% | 95.6% | 231 | 16.8 | 6.2 | 154 |
+| RSMILES_1x | ~30M | 49.3% | 77.8% | 83.5% | 83.5% | 319 | 34.9 | 14.0 | 121 |
+| RSMILES_20x | ~30M | 55.3% | 84.8% | 89.6% | 93.0% | 4,404 | 270.6 | 108.2 | 924 |
+| Chemformer | 44.7M | 53.6% | 62.0% | 62.8% | 64.0% | 8,492 | 641.9 | 256.7 | 209 |
+| RSGPT | ~1.6B | 76.0% | 94.5% | 96.6% | 97.8% | 7,892 | 627.0 | 250.8 | 6,950 |
+| RetroBridge | 4.6M | 22.1% | 39.4% | 44.9% | 52.8% | 15,749 | 937.2 | 403.5 | 601 |
 
-**Key insight:** LocalRetro achieves 52.5% top-1 accuracy (97.7% top-50) using only 8.5 g CO2 and 154 MB GPU memory — **65x less carbon** than RSGPT and **45x less** than the most expensive model (RetroBridge), while delivering competitive top-k coverage. Chemformer leads on top-1 accuracy (88.0%) but at 65x the carbon cost of LocalRetro. The largest model (RSGPT, ~1.6B params) achieves the best top-50 accuracy (98.7%) but consumes **178x more carbon** than LocalRetro for only a 1 percentage point improvement.
+**Key insights:**
+- **LocalRetro** achieves 52.8% top-1 accuracy at only **6.2 g CO2 per 500 samples** — the most carbon-efficient model with competitive accuracy.
+- **RSGPT** (1.6B params) leads on top-1 accuracy (76.0%) but at **40x the carbon cost** of LocalRetro.
+- **RSMILES 1x vs 20x** demonstrates the test-time augmentation tradeoff: 20x augmentation improves top-1 by +6% but costs **7.7x more carbon** — a clear accuracy-vs-efficiency frontier.
+- **Chemformer** achieves similar top-1 to LocalRetro (53.6% vs 52.8%) but at **41x the carbon cost**, highlighting that larger models don't always pay off.
+- **RetroBridge** (diffusion-based) is both the slowest and lowest accuracy — consuming **403.5 g CO2 per 500 samples** for only 22.1% top-1 accuracy.
 
 ---
 
@@ -150,8 +157,9 @@ Carbon4Science/
 ├── Retro/                   # Retrosynthesis task (Shuan Chen)
 │   ├── neuralsym/           # Template-based, Nature 2018
 │   ├── LocalRetro/          # MPNN + attention, JACS Au 2021
-│   ├── RetroBridge/         # Markov bridges, ICLR 2024
+│   ├── RSMILES/             # Root-aligned SMILES, Chem. Sci. 2022
 │   ├── Chemformer/          # BART transformer, ML:ST 2022
+│   ├── RetroBridge/         # Markov bridges, ICLR 2024
 │   └── RSGPT/               # GPT 1.6B params, Nat. Comm. 2025
 │
 ├── MolGen/                  # Molecule generation (Gunwook Nam)

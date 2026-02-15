@@ -95,17 +95,39 @@ def load_test_data(data_path: Optional[str] = None, limit: Optional[int] = None)
                 if limit and len(test_cases) >= limit:
                     break
         else:
-            # Data is a DataFrame with product/reactant columns
-            for idx, row in data.iterrows():
-                product = row.get('product_smiles', row.get('product', ''))
-                ground_truth = row.get('reactant_smiles', row.get('reactants', ''))
-                if product and ground_truth:
-                    test_cases.append({
-                        'product': product,
-                        'ground_truth': ground_truth
-                    })
-                if limit and len(test_cases) >= limit:
-                    break
+            # Data is a DataFrame
+            # Check for Mol-object columns (e.g. Chemformer pickle with reactants_mol/products_mol)
+            if 'products_mol' in data.columns and 'reactants_mol' in data.columns:
+                # Filter to test set if 'set' column exists
+                if 'set' in data.columns:
+                    data = data[data['set'] == 'test']
+
+                for idx, row in data.iterrows():
+                    prod_mol = row['products_mol']
+                    react_mol = row['reactants_mol']
+                    if prod_mol is None or react_mol is None:
+                        continue
+                    product = Chem.MolToSmiles(prod_mol, canonical=True)
+                    ground_truth = Chem.MolToSmiles(react_mol, canonical=True)
+                    if product and ground_truth:
+                        test_cases.append({
+                            'product': product,
+                            'ground_truth': canonicalize_smiles(ground_truth),
+                        })
+                    if limit and len(test_cases) >= limit:
+                        break
+            else:
+                # Standard DataFrame with SMILES string columns
+                for idx, row in data.iterrows():
+                    product = row.get('product_smiles', row.get('product', ''))
+                    ground_truth = row.get('reactant_smiles', row.get('reactants', ''))
+                    if product and ground_truth:
+                        test_cases.append({
+                            'product': product,
+                            'ground_truth': ground_truth
+                        })
+                    if limit and len(test_cases) >= limit:
+                        break
     else:
         raise ValueError(f"Unsupported file format: {data_path}")
 

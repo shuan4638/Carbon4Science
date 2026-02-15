@@ -37,6 +37,22 @@ RSGPT:
   data_dir: Retro/RSGPT/data
   gpu_memory_mb: 16000  # Large model, needs more memory
 
+RSMILES_1x:
+  env: rsmiles
+  checkpoint: Retro/RSMILES/r-smiles_data_and_models/USPTO_50K_PtoR.pt
+  checkpoint_url: https://drive.google.com/drive/folders/1c15h6TNU6MSNXzqB6dQVMWOs2Aae8hs6
+  data_dir: Retro/RSMILES/repo/dataset
+  augmentation_factor: 1
+  gpu_memory_mb: 4000
+
+RSMILES_20x:
+  env: rsmiles
+  checkpoint: Retro/RSMILES/r-smiles_data_and_models/USPTO_50K_PtoR.pt
+  checkpoint_url: https://drive.google.com/drive/folders/1c15h6TNU6MSNXzqB6dQVMWOs2Aae8hs6
+  data_dir: Retro/RSMILES/repo/dataset
+  augmentation_factor: 20
+  gpu_memory_mb: 4000
+
 # Dataset paths
 datasets:
   USPTO_50K:

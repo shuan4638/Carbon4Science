@@ -40,6 +40,8 @@ MODEL_STYLES = {
     "RetroBridge": {"color": "#FF9800", "marker": "D", "params": "4.6M", "year": 2024, "venue": "ICLR"},
     "Chemformer":  {"color": "#9C27B0", "marker": "^", "params": "44.7M", "year": 2022, "venue": "ML:ST"},
     "RSGPT":       {"color": "#F44336", "marker": "P", "params": "~1.6B","year": 2025, "venue": "Nat. Commun."},
+    "RSMILES_1x":  {"color": "#00BCD4", "marker": "v", "params": "~30M", "year": 2022, "venue": "Chem. Sci."},
+    "RSMILES_20x": {"color": "#009688", "marker": "^", "params": "~30M", "year": 2022, "venue": "Chem. Sci."},
 }
 
 
@@ -97,7 +99,9 @@ XAXIS_CONFIG = {
 def _xaxis_label(xaxis_key, norm_n=None):
     """Build x-axis label. If norm_n is set, append 'per N samples'."""
     base = XAXIS_CONFIG[xaxis_key]["label"]
-    if norm_n:
+    if norm_n == 1:
+        return f"{base} per molecule"
+    elif norm_n:
         return f"{base} per {norm_n} samples"
     return base
 
@@ -338,6 +342,8 @@ def main():
                         help="Only use results with exactly N samples (e.g., --samples 500)")
     parser.add_argument("--no-normalize", action="store_true",
                         help="Don't normalize to per-1000 samples")
+    parser.add_argument("--norm", type=int, default=None,
+                        help="Normalize cost to per-N samples (e.g., --norm 1 for per molecule)")
 
     args = parser.parse_args()
 
@@ -356,9 +362,11 @@ def main():
         print(f"  {name:15s}  n={n:5d}  top-1={top1*100:5.1f}%  "
               f"CO2={co2:.2f}g  time={dur:.1f}s")
 
-    # Normalization: if --samples is given, show raw values for that sample count.
-    # If --no-normalize, show raw values. Otherwise normalize to per-1000.
-    if args.no_normalize:
+    # Normalization: --norm N overrides all. Otherwise:
+    # --no-normalize = raw values, --samples = per that count, default = per 1000.
+    if args.norm is not None:
+        norm_n = args.norm
+    elif args.no_normalize:
         norm_n = None
     elif args.samples:
         norm_n = args.samples

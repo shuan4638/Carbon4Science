@@ -60,6 +60,14 @@ setup_rsgpt() {
     echo "✓ RSGPT environment ready"
 }
 
+setup_rsmiles() {
+    echo "Setting up R-SMILES environment..."
+    cd ../Retro/RSMILES
+    conda env create -f environment.yml
+    cd -
+    echo "✓ R-SMILES environment ready"
+}
+
 # Main
 if [[ $# -eq 0 ]]; then
     echo "Setting up all environments..."
@@ -70,6 +78,7 @@ if [[ $# -eq 0 ]]; then
     setup_retrobridge
     setup_chemformer
     setup_rsgpt
+    setup_rsmiles
     echo ""
     echo "All environments ready!"
 else
@@ -79,9 +88,10 @@ else
         RetroBridge|retrobridge) setup_retrobridge ;;
         Chemformer|chemformer) setup_chemformer ;;
         RSGPT|rsgpt) setup_rsgpt ;;
+        RSMILES*|rsmiles*) setup_rsmiles ;;
         *)
             echo "Unknown model: $1"
-            echo "Available: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT"
+            echo "Available: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT, RSMILES"
             exit 1
             ;;
     esac

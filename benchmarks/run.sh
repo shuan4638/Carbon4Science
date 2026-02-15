@@ -17,6 +17,8 @@ declare -A MODEL_ENVS=(
     ["RetroBridge"]="retrobridge"
     ["Chemformer"]="chemformer"
     ["RSGPT"]="gpt"
+    ["RSMILES_1x"]="rsmiles"
+    ["RSMILES_20x"]="rsmiles"
 )
 
 # Parse --model argument

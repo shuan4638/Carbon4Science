@@ -35,6 +35,8 @@ Each model has its own conda environment. **NEVER** suggest installing packages 
 | RetroBridge | `retrobridge` |
 | Chemformer | `chemformer` |
 | RSGPT | `gpt` |
+| RSMILES_1x | `rsmiles` |
+| RSMILES_20x | `rsmiles` |
 
 Other tasks (MolGen, MatGen, MLIP) follow the same pattern: one conda env per model.
 
@@ -129,6 +131,34 @@ MODEL_STYLES = {
 
 **Output:** Plots are saved to `benchmarks/figures/<Task>/`.
 
+### Rule 11: Slurm Job Submission
+
+**ALWAYS** submit benchmark runs via Slurm instead of running them as background processes. Use `benchmarks/slurm_benchmark.sh`:
+
+```bash
+# Single model
+sbatch --job-name=RSGPT benchmarks/slurm_benchmark.sh RSGPT
+
+# Chemformer with proper test set (pickle)
+sbatch --job-name=Chemformer benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
+
+# R-SMILES variants
+sbatch --job-name=RSMILES_20x benchmarks/slurm_benchmark.sh RSMILES_20x
+
+# Check job status
+squeue -u $USER
+```
+
+**Cluster details:**
+- Partitions: `5000_ada` (GPU), `6000_ada` (GPU), `cpu_only`
+- GPU resource: `--gres=gpu:5000ada:1`
+- Max walltime: 72 hours (GPU), 48 hours (CPU)
+- Override memory with `--mem=32G` for large models (e.g., RSGPT 1B)
+
+Logs are saved to `benchmarks/logs/<jobname>.o<jobid>`.
+
+**NEVER** run long benchmarks as background shell processes. Always use `sbatch`.
+
 ### Results JSON Schema
 
 Every benchmark run produces a JSON file following this structure:
@@ -200,7 +230,7 @@ Results are saved to `benchmarks/results/<Task>/<model>_<N>.json`.
 ```
 Carbon4Science/
 ├── benchmarks/        # Shared infrastructure (runner, carbon tracker, configs)
-├── Retro/             # 5 models: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT
+├── Retro/             # 7 models: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT, RSMILES_1x, RSMILES_20x
 ├── MolGen/            # Molecule generation models (planned)
 ├── MatGen/            # Material generation models (planned)
 └── MLIP/              # ML interatomic potential models (planned)
