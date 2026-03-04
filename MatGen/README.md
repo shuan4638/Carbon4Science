@@ -48,15 +48,15 @@ Material generation: Generate novel crystal structures and materials.
 
 ### SUN Accuracy vs Carbon Cost
 
-<img src="./accuracy_vs_carbon_panels.png" alt="SUN vs Carbon" width="50%">
+<img src="./results/figures/accuracy_vs_carbon_panels.png" alt="SUN vs Carbon" width="50%">
 
 ### SUN Accuracy vs Energy
 
-<img src="./accuracy_vs_energy_panels.png" alt="SUN vs Energy" width="50%">
+<img src="./results/figures/accuracy_vs_energy_panels.png" alt="SUN vs Energy" width="50%">
 
 ### SUN Accuracy vs Speed
 
-<img src="./accuracy_vs_speed_panels.png" alt="SUN vs Speed" width="50%">
+<img src="./results/figures/accuracy_vs_speed_panels.png" alt="SUN vs Speed" width="50%">
 
 ## Usage
 

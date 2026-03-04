@@ -20,12 +20,12 @@ When the user invokes this skill:
 
 ### Step 1: Check that results exist
 
-Look for JSON files in `benchmarks/results/<Task>/`:
+Look for JSON files in `<Task>/results/outputs/`:
 ```bash
-ls benchmarks/results/<Task>/*.json
+ls <Task>/results/outputs/*.json
 ```
 
-If no results are found, tell the user to run benchmarks first (`/benchmark` or `./benchmarks/run.sh`).
+If no results are found, tell the user to run benchmarks first (`/benchmark` or `./Retro/benchmarks/run.sh`).
 
 ### Step 2: Generate plots
 
@@ -34,24 +34,24 @@ Run `plot_results.py` to generate combined and panel plots. **Always normalize p
 ```bash
 # Combined view, normalized (RECOMMENDED)
 # N is task-specific: Retro uses 500, other tasks choose their own
-python benchmarks/plot_results.py --task <Task> --combined --norm <N>
+python Retro/benchmarks/plot_results.py --task <Task> --combined --norm <N>
 
 # Per-metric panel view, normalized
-python benchmarks/plot_results.py --task <Task> --norm <N>
+python Retro/benchmarks/plot_results.py --task <Task> --norm <N>
 
 # Per-molecule normalization
-python benchmarks/plot_results.py --task <Task> --combined --norm 1
+python Retro/benchmarks/plot_results.py --task <Task> --combined --norm 1
 
 # Raw (unnormalized) values
-python benchmarks/plot_results.py --task <Task> --combined --no-normalize
+python Retro/benchmarks/plot_results.py --task <Task> --combined --no-normalize
 
 # Filter to a specific sample count
-python benchmarks/plot_results.py --task <Task> --combined --samples 500
+python Retro/benchmarks/plot_results.py --task <Task> --combined --samples 500
 ```
 
 ### Step 3: Report output locations
 
-Plots are saved to `benchmarks/figures/<Task>/`:
+Plots are saved to `<Task>/results/figures/`:
 - `accuracy_vs_carbon_combined.png` — CO2 emissions (g) on x-axis
 - `accuracy_vs_energy_combined.png` — Energy (Wh) on x-axis
 - `accuracy_vs_speed_combined.png` — Time (s) on x-axis
@@ -71,7 +71,7 @@ With `--samples N`, filenames include the sample count (e.g., `accuracy_vs_carbo
 
 ## Adding MODEL_STYLES for new tasks
 
-If a model appears as a gray "x" marker, it needs a style entry in `benchmarks/plot_results.py`:
+If a model appears as a gray "x" marker, it needs a style entry in `Retro/benchmarks/plot_results.py`:
 
 ```python
 MODEL_STYLES = {

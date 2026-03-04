@@ -323,7 +323,7 @@ def main():
         if results:
             print(create_comparison_table(results))
         else:
-            print("No results found in benchmarks/results/")
+            print("No results found in Retro/results/outputs/")
         return
 
     # Determine which models to run

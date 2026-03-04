@@ -44,7 +44,7 @@ Seven models benchmarked on the full USPTO-50K test set (~5,000 samples), evalua
 
 **Hardware:** NVIDIA RTX 5000 Ada Generation, Intel Xeon Platinum 8558, 503 GB RAM
 
-![Retrosynthesis: Accuracy vs Carbon Cost](benchmarks/figures/Retro/accuracy_vs_carbon_combined.png)
+![Retrosynthesis: Accuracy vs Carbon Cost](Retro/results/figures/accuracy_vs_carbon_combined.png)
 
 | Model | Params | Top-1 | Top-5 | Top-10 | Top-50 | Time/500 (s) | Energy/500 (Wh) | CO2/500 (g) | Peak GPU (MB) |
 |-------|--------|-------|-------|--------|--------|-------------|----------------|------------|---------------|
@@ -181,12 +181,12 @@ reference implementation.
 
 Claude Code will guide you through each of these steps:
 
-1. **Task directory** — `<Task>/` with README, evaluate.py, data/, and model subdirectories
-2. **Evaluation module** — `<Task>/evaluate.py` with your task's metrics and test data loader
-3. **Models** — `<Task>/<Model>/Inference.py` with the uniform `run()` interface, conda environment, and CLAUDE.md for each model
-4. **Benchmark registration** — Your task and models registered in the benchmark runner (`run_benchmark.py`, `run.sh`, `setup_envs.sh`, `models.yaml`)
+1. **Task directory** — `<Task>/` with README, evaluate.py, data/, model subdirectories, and `results/{outputs,figures}/`
+2. **Benchmark scripts** — `<Task>/benchmarks/` copied from `Retro/benchmarks/` and adapted for your models
+3. **Evaluation module** — `<Task>/evaluate.py` with your task's metrics and test data loader
+4. **Models** — `<Task>/<Model>/Inference.py` with the uniform `run()` interface, conda environment, and CLAUDE.md for each model
 5. **Benchmark runs** — All models run with carbon tracking on the same test set and hardware
-6. **Results** — Accuracy vs cost plots and a results table in your task README
+6. **Results** — JSON outputs in `<Task>/results/outputs/`, plots in `<Task>/results/figures/`, and a results table in your task README
 
 ### Reference
 
@@ -195,7 +195,7 @@ The `Retro/` task is the complete reference implementation. Key files to study:
 - `Retro/evaluate.py` — evaluation module structure
 - `Retro/LocalRetro/Inference.py` — uniform `run()` interface
 - `Retro/LocalRetro/environment.yml` — conda environment spec
-- `benchmarks/configs/models.yaml` — model registration format
+- `Retro/benchmarks/configs/models.yaml` — model registration format
 
 ### Skills
 
@@ -226,25 +226,21 @@ Carbon4Science/
 ├── CLAUDE.md                 # Instructions for Claude Code
 ├── .claude/skills/           # Claude Code skills (add-model, benchmark, evaluate)
 │
-├── benchmarks/               # Shared benchmark infrastructure
-│   ├── run.sh               # Unified runner (handles conda envs)
-│   ├── run_benchmark.py     # Python benchmark runner
-│   ├── carbon_tracker.py    # Carbon/energy measurement
-│   ├── setup_envs.sh        # Environment setup
-│   ├── configs/             # Model configs, hardware specs
-│   └── results/             # Benchmark outputs (JSON)
-│
 ├── Retro/                   # Retrosynthesis task (Shuan Chen)
-│   ├── neuralsym/           # Template-based, Nature 2018
+│   ├── benchmarks/          # Benchmark scripts (runner, tracker, plots)
+│   ├── results/
+│   │   ├── outputs/         # JSON result files
+│   │   └── figures/         # Generated plots
+│   ├── neuralsym/           # Template-based, Chem. Eur. J. 2017
 │   ├── LocalRetro/          # MPNN + attention, JACS Au 2021
 │   ├── RSMILES/             # Root-aligned SMILES, Chem. Sci. 2022
 │   ├── Chemformer/          # BART transformer, ML:ST 2022
 │   ├── RetroBridge/         # Markov bridges, ICLR 2024
 │   └── RSGPT/               # GPT 1.6B params, Nat. Comm. 2025
 │
-├── MolGen/                  # Molecule generation (Gunwook Nam)
-├── MatGen/                  # Material generation (Junkil Park)
-└── MLIP/                    # ML interatomic potentials (Junyoung Choi)
+├── MolGen/                  # Molecule generation (Gunwook Nam) — same structure
+├── MatGen/                  # Material generation (Junkil Park) — same structure
+└── MLIP/                    # ML interatomic potentials (Junyoung Choi) — same structure
 ```
 
 ---

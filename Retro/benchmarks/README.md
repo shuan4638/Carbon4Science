@@ -144,7 +144,7 @@ tracker.print_summary()
 ```python
 from carbon_tracker import aggregate_results, create_comparison_table
 
-results = aggregate_results("benchmarks/results")
+results = aggregate_results("Retro/results/outputs")
 print(create_comparison_table(results))
 ```
 
@@ -263,14 +263,19 @@ For inference benchmarks:
 ## Directory Structure
 
 ```
-benchmarks/
-├── README.md              # This file
-├── carbon_tracker.py      # Unified tracking module
+Retro/benchmarks/           # Retro-specific benchmark scripts
+├── README.md               # This file
+├── carbon_tracker.py       # Unified tracking module
 ├── configs/
 │   └── hardware_template.yaml
-└── results/
-    ├── neuralsym_inference_run1_20250127.json
-    ├── neuralsym_inference_run2_20250127.json
+└── logs/
+
+Retro/results/              # Retro results directory
+├── outputs/
+│   ├── neuralsym_5007.json
+│   └── ...
+└── figures/
+    ├── accuracy_vs_carbon_combined.png
     └── ...
 ```
 
@@ -359,7 +364,7 @@ tracker = CarbonTracker(project_name="my_experiment")
 To contribute benchmark results:
 
 1. Run benchmarks following this protocol
-2. Verify results are saved in `benchmarks/results/`
+2. Verify results are saved in `Retro/results/outputs/`
 3. Include hardware configuration
 4. Submit a pull request with your results
 

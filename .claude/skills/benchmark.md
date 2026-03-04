@@ -38,16 +38,16 @@ When the user invokes this skill:
    - Chemformer -> `chemformer`
    - RSGPT -> `gpt`
 
-   For other tasks, check the model's `environment.yml` or `benchmarks/run.sh`.
+   For other tasks, check the model's `environment.yml` or `Retro/benchmarks/run.sh`.
 
 3. **Run the benchmark:**
    ```bash
-   python benchmarks/run_benchmark.py \
+   python Retro/benchmarks/run_benchmark.py \
        --task <Task> \
        --model <model_name> \
        --limit <N> \
        --track_carbon \
-       --output benchmarks/results/<Task>/<model>_<N>.json
+       --output <Task>/results/outputs/<model>_<N>.json
    ```
 
 4. **Report results:**
@@ -58,13 +58,13 @@ When the user invokes this skill:
 5. **Generate plots (normalized):**
    After all models have been benchmarked, choose a normalization N (task leader decides, e.g., Retro uses 500):
    ```bash
-   python benchmarks/plot_results.py --task <Task> --combined --norm <N>
-   python benchmarks/plot_results.py --task <Task> --norm <N>
+   python Retro/benchmarks/plot_results.py --task <Task> --combined --norm <N>
+   python Retro/benchmarks/plot_results.py --task <Task> --norm <N>
    ```
 
 6. **Update READMEs (follow Rule 11 Reporting Format):**
 
-   In `benchmarks/README.md`, add a `## <Task> Model Comparison` section with three tables:
+   In `Retro/benchmarks/README.md`, add a `## <Task> Model Comparison` section with three tables:
 
    - **Model Specifications** — Year, Venue, Architecture, Parameters, Model Size, GPU Memory (MB)
    - **Accuracy** — Task-specific metrics, sorted by primary metric (descending), best model bolded
@@ -80,7 +80,7 @@ When the user invokes this skill:
 
 ## Notes
 - Always run from the repository root directory
-- Results are saved to `benchmarks/results/<Task>/<model>_<N>.json`
-- **Submit via Slurm** for full-dataset runs: `sbatch --job-name=<Model> benchmarks/slurm_benchmark.sh <Model>`
+- Results are saved to `<Task>/results/outputs/<model>_<N>.json`
+- **Submit via Slurm** for full-dataset runs: `sbatch --job-name=<Model> Retro/benchmarks/slurm_benchmark.sh <Model>`
 - Use `--limit` for quick smoke tests only
 - For parallel GPU execution on different models, use `CUDA_VISIBLE_DEVICES=<N>` prefix to assign each model to a different GPU

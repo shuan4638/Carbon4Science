@@ -82,7 +82,7 @@ dependencies:
 
 ### Step 5: Register in Benchmark Runner
 
-Update `benchmarks/run_benchmark.py`:
+Update `<Task>/benchmarks/run_benchmark.py`:
 ```python
 TASKS = {
     "<Task>": {
@@ -94,14 +94,14 @@ TASKS = {
 }
 ```
 
-Update `benchmarks/run.sh`:
+Update `<Task>/benchmarks/run.sh`:
 ```bash
 declare -A MODEL_ENVS=(
     ["MyNewModel"]="mymodel_env"
 )
 ```
 
-Update `benchmarks/setup_envs.sh`:
+Update `<Task>/benchmarks/setup_envs.sh`:
 ```bash
 setup_mymodel() {
     echo "Setting up MyNewModel environment..."
@@ -114,15 +114,15 @@ setup_mymodel() {
 ### Step 6: Test the Model
 ```bash
 # Quick test with 10 samples
-./benchmarks/run.sh --model MyNewModel --limit 10
+./<Task>/benchmarks/run.sh --model MyNewModel --limit 10
 
 # Full benchmark with carbon tracking
-./benchmarks/run.sh --model MyNewModel --limit 1000 --track_carbon
+./<Task>/benchmarks/run.sh --model MyNewModel --limit 1000 --track_carbon
 ```
 
 ### Step 7: Register Model in Plot Script
 
-Add a style entry to `MODEL_STYLES` in `benchmarks/plot_results.py`:
+Add a style entry to `MODEL_STYLES` in `<Task>/benchmarks/plot_results.py`:
 
 ```python
 MODEL_STYLES = {
@@ -143,10 +143,10 @@ MODEL_STYLES = {
 - [ ] `CLAUDE.md` with model guidance
 - [ ] Model registered in `run_benchmark.py`
 - [ ] Environment added to `run.sh` and `setup_envs.sh`
-- [ ] Config added to `benchmarks/configs/models.yaml`
-- [ ] Model style added to `benchmarks/plot_results.py` `MODEL_STYLES`
+- [ ] Config added to `<Task>/benchmarks/configs/models.yaml`
+- [ ] Model style added to `<Task>/benchmarks/plot_results.py` `MODEL_STYLES`
 - [ ] Quick test passes with `--limit 10`
 - [ ] Full benchmark submitted via Slurm with `--track_carbon`
-- [ ] Three comparison tables updated in `benchmarks/README.md` (Model Specs, Accuracy, Carbon Efficiency)
+- [ ] Three comparison tables updated in `<Task>/benchmarks/README.md` (Model Specs, Accuracy, Carbon Efficiency)
 - [ ] Combined results table (per-N normalized) updated in root `README.md`
 - [ ] Plots regenerated with `--norm <N>` (N chosen by task leader)

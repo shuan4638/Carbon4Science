@@ -77,10 +77,9 @@ logs/
 wandb/
 lightning_logs/
 
-# Benchmark results (keep .gitkeep)
-benchmarks/results/*.json
-benchmarks/results/*.csv
-!benchmarks/results/.gitkeep
+# Benchmark results (per-task results dirs)
+*/results/outputs/*.json
+*/results/outputs/*.csv
 
 # CodeCarbon outputs
 emissions.csv

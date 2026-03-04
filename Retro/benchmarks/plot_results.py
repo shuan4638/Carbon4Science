@@ -2,14 +2,14 @@
 """
 Plot accuracy vs cost (carbon, energy, or speed) for benchmark models.
 
-Loads benchmark results from benchmarks/results/<task>/ and creates scatter
+Loads benchmark results from Retro/results/outputs/ and creates scatter
 plots showing top-k accuracy (y-axis) vs cost metric (x-axis).
 
 Usage:
-    python benchmarks/plot_results.py                          # all 3 plots
-    python benchmarks/plot_results.py --xaxis duration_seconds # speed only
-    python benchmarks/plot_results.py --combined               # combined view
-    python benchmarks/plot_results.py --task MolGen            # different task
+    python Retro/benchmarks/plot_results.py                          # all 3 plots
+    python Retro/benchmarks/plot_results.py --xaxis duration_seconds # speed only
+    python Retro/benchmarks/plot_results.py --combined               # combined view
+    python Retro/benchmarks/plot_results.py --task MolGen            # different task
 """
 
 import argparse
@@ -32,6 +32,8 @@ matplotlib.rcParams.update({
 })
 
 BENCHMARKS_DIR = Path(__file__).resolve().parent
+TASK_DIR = BENCHMARKS_DIR.parent                        # Retro/
+RESULTS_DIR = TASK_DIR / "results"                      # Retro/results/
 
 # Model display settings: color, marker, params, publication venue
 MODEL_STYLES = {
@@ -114,13 +116,11 @@ def load_results(task="Retro", samples=None):
         samples: If set, only load results with exactly this many samples.
                  If None, keeps the largest-N run per model.
 
-    Searches both the task-specific subfolder (results/<task>/) and the flat
-    results/ folder for backward compatibility.
+    Searches Retro/results/outputs/ for JSON result files.
     """
     results = {}
     search_dirs = [
-        BENCHMARKS_DIR / "results" / task,
-        BENCHMARKS_DIR / "results",
+        RESULTS_DIR / "outputs",
     ]
     seen_files = set()
 
@@ -381,7 +381,7 @@ def main():
         if args.output and len(xaxis_list) == 1:
             output = args.output
         else:
-            fig_dir = BENCHMARKS_DIR / "figures" / args.task
+            fig_dir = RESULTS_DIR / "figures"
             suffix = "combined" if args.combined else "panels"
             n_tag = f"_{args.samples}" if args.samples else ""
             output = str(fig_dir / f"accuracy_vs_{xcfg['file_suffix']}_{suffix}{n_tag}.png")

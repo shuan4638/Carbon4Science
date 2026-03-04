@@ -40,7 +40,7 @@ Each model has its own conda environment. **NEVER** suggest installing packages 
 
 Other tasks (MolGen, MatGen, MLIP) follow the same pattern: one conda env per model.
 
-When running models, use: `./benchmarks/run.sh --model <name>` (handles env switching automatically)
+When running models, use: `./Retro/benchmarks/run.sh --model <name>` (handles env switching automatically)
 
 ### Rule 3: Benchmark Runner
 
@@ -48,10 +48,10 @@ When running models, use: `./benchmarks/run.sh --model <name>` (handles env swit
 
 ```bash
 # Correct
-./benchmarks/run.sh --model neuralsym --limit 1000 --track_carbon
+./Retro/benchmarks/run.sh --model neuralsym --limit 1000 --track_carbon
 
 # Wrong - will fail due to environment issues
-python benchmarks/run_benchmark.py --model neuralsym
+python Retro/benchmarks/run_benchmark.py --model neuralsym
 ```
 
 ### Rule 4: Adding New Models
@@ -61,17 +61,17 @@ When adding a new model, you MUST update ALL of these files:
 1. `<Task>/<ModelName>/Inference.py` - Implement uniform interface
 2. `<Task>/<ModelName>/environment.yml` - Dependencies
 3. `<Task>/<ModelName>/CLAUDE.md` - Model-specific guidance
-4. `benchmarks/run_benchmark.py` - Add to TASKS dict
-5. `benchmarks/run.sh` - Add to MODEL_ENVS mapping
-6. `benchmarks/setup_envs.sh` - Add setup function
-7. `benchmarks/configs/models.yaml` - Add configuration
+4. `<Task>/benchmarks/run_benchmark.py` - Add to TASKS dict
+5. `<Task>/benchmarks/run.sh` - Add to MODEL_ENVS mapping
+6. `<Task>/benchmarks/setup_envs.sh` - Add setup function
+7. `<Task>/benchmarks/configs/models.yaml` - Add configuration
 
 ### Rule 5: Carbon Tracking
 
 When running benchmarks, ALWAYS include `--track_carbon` flag:
 
 ```bash
-./benchmarks/run.sh --model LocalRetro --limit 1000 --track_carbon
+./Retro/benchmarks/run.sh --model LocalRetro --limit 1000 --track_carbon
 ```
 
 ### Rule 6: Device Selection
@@ -95,35 +95,35 @@ The benchmark runner dynamically loads the correct evaluator based on the `--tas
 
 When a task leader asks to benchmark their task end-to-end, follow these phases in order:
 
-1. **Setup** — Create task directory structure (`<Task>/`, `<Task>/data/`, model subdirectories)
+1. **Setup** — Create task directory structure (`<Task>/`, `<Task>/data/`, `<Task>/results/outputs/`, `<Task>/results/figures/`, `<Task>/benchmarks/`, model subdirectories). Copy benchmark scripts from `Retro/benchmarks/` as a starting template.
 2. **Evaluate** — Implement `<Task>/evaluate.py` with `METRICS`, `load_test_data()`, and `evaluate()`
 3. **Models** — For each model, implement `Inference.py` with the uniform `run()` interface, create `environment.yml`, and write `CLAUDE.md`
-4. **Register** — Add all models to `benchmarks/run_benchmark.py` (TASKS dict), `benchmarks/run.sh` (MODEL_ENVS), `benchmarks/setup_envs.sh`, `benchmarks/configs/models.yaml`, and `benchmarks/plot_results.py` (MODEL_STYLES)
-5. **Run** — Submit benchmarks via Slurm: `sbatch --job-name=<Model> benchmarks/slurm_benchmark.sh <Model>`. Run ALL models on the FULL test set with `--track_carbon`.
-6. **Plot** — Generate normalized plots: `python benchmarks/plot_results.py --task <Task> --combined --norm <N>` where N is chosen by the task leader (e.g., 500 for Retro).
+4. **Register** — Add all models to `<Task>/benchmarks/run_benchmark.py` (TASKS dict), `<Task>/benchmarks/run.sh` (MODEL_ENVS), `<Task>/benchmarks/setup_envs.sh`, `<Task>/benchmarks/configs/models.yaml`, and `<Task>/benchmarks/plot_results.py` (MODEL_STYLES)
+5. **Run** — Submit benchmarks via Slurm: `sbatch --job-name=<Model> <Task>/benchmarks/slurm_benchmark.sh <Model>`. Run ALL models on the FULL test set with `--track_carbon`.
+6. **Plot** — Generate normalized plots: `python <Task>/benchmarks/plot_results.py --task <Task> --combined --norm <N>` where N is chosen by the task leader (e.g., 500 for Retro).
 7. **Report** — Follow Rule 11 (Reporting Format) exactly:
-   - Add three comparison tables to `benchmarks/README.md` (Model Specs, Accuracy, Carbon Efficiency)
+   - Add three comparison tables to `<Task>/benchmarks/README.md` (Model Specs, Accuracy, Carbon Efficiency)
    - Add a combined results table (per-N normalized) to the root `README.md`
    - Include the accuracy-vs-carbon plot in the root `README.md`
    - Write 3–5 key observations highlighting accuracy-efficiency tradeoffs
 
 ### Rule 10: Plot Generation
 
-Use `benchmarks/plot_results.py` to generate accuracy vs cost plots.
+Use `<Task>/benchmarks/plot_results.py` to generate accuracy vs cost plots.
 
 **Commands:**
 ```bash
 # All three plots (carbon, energy, speed) in combined view
-python benchmarks/plot_results.py --task <Task> --combined
+python <Task>/benchmarks/plot_results.py --task <Task> --combined
 
 # Specific sample count
-python benchmarks/plot_results.py --task <Task> --combined --samples 500
+python <Task>/benchmarks/plot_results.py --task <Task> --combined --samples 500
 
 # Single x-axis metric with custom output
-python benchmarks/plot_results.py --task <Task> --combined --xaxis emissions_g_co2 -o my_plot.png
+python <Task>/benchmarks/plot_results.py --task <Task> --combined --xaxis emissions_g_co2 -o my_plot.png
 
 # Per-metric panel view (one subplot per accuracy metric)
-python benchmarks/plot_results.py --task <Task>
+python <Task>/benchmarks/plot_results.py --task <Task>
 ```
 
 **Adding new models:** When adding a model to a new or existing task, add an entry to `MODEL_STYLES` in `plot_results.py`:
@@ -133,13 +133,13 @@ MODEL_STYLES = {
 }
 ```
 
-**Output:** Plots are saved to `benchmarks/figures/<Task>/`.
+**Output:** Plots are saved to `<Task>/results/figures/`.
 
 ### Rule 11: Reporting Format
 
 After running all benchmarks for a task, produce the following standardized deliverables. Use the `Retro/` results as the reference.
 
-#### Three Comparison Tables in `benchmarks/README.md`
+#### Three Comparison Tables in `<Task>/benchmarks/README.md`
 
 Add a section `## <Task> Model Comparison` with these three tables:
 
@@ -177,15 +177,15 @@ Add a section `## <Task> Results` with a single merged table. Costs normalized *
 
 Formula: `raw_value / num_samples * N`
 
-Include a plot reference: `![<Task>: Accuracy vs Carbon Cost](benchmarks/figures/<Task>/accuracy_vs_carbon_combined.png)`
+Include a plot reference: `![<Task>: Accuracy vs Carbon Cost](<Task>/results/figures/accuracy_vs_carbon_combined.png)`
 
 #### Plots
 
 Generate all plots with the task's chosen normalization:
 
 ```bash
-python benchmarks/plot_results.py --task <Task> --combined --norm <N>
-python benchmarks/plot_results.py --task <Task> --norm <N>
+python <Task>/benchmarks/plot_results.py --task <Task> --combined --norm <N>
+python <Task>/benchmarks/plot_results.py --task <Task> --norm <N>
 ```
 
 Where `<N>` is the per-sample normalization chosen by the task leader. Examples:
@@ -193,23 +193,23 @@ Where `<N>` is the per-sample normalization chosen by the task leader. Examples:
 - MolGen: task leader decides (e.g., `--norm 1000`)
 - MLIP: task leader decides (e.g., `--norm 100`)
 
-This creates 6 files in `benchmarks/figures/<Task>/`:
+This creates 6 files in `<Task>/results/figures/`:
 - `accuracy_vs_{carbon,energy,speed}_combined.png`
 - `accuracy_vs_{carbon,energy,speed}_panels.png`
 
 ### Rule 12: Slurm Job Submission
 
-**ALWAYS** submit benchmark runs via Slurm instead of running them as background processes. Use `benchmarks/slurm_benchmark.sh`:
+**ALWAYS** submit benchmark runs via Slurm instead of running them as background processes. Use `Retro/benchmarks/slurm_benchmark.sh`:
 
 ```bash
 # Single model
-sbatch --job-name=RSGPT benchmarks/slurm_benchmark.sh RSGPT
+sbatch --job-name=RSGPT Retro/benchmarks/slurm_benchmark.sh RSGPT
 
 # Chemformer with proper test set (pickle)
-sbatch --job-name=Chemformer benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
+sbatch --job-name=Chemformer Retro/benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
 
 # R-SMILES variants
-sbatch --job-name=RSMILES_20x benchmarks/slurm_benchmark.sh RSMILES_20x
+sbatch --job-name=RSMILES_20x Retro/benchmarks/slurm_benchmark.sh RSMILES_20x
 
 # Check job status
 squeue -u $USER
@@ -221,7 +221,7 @@ squeue -u $USER
 - Max walltime: 72 hours (GPU), 48 hours (CPU)
 - Override memory with `--mem=32G` for large models (e.g., RSGPT 1B)
 
-Logs are saved to `benchmarks/logs/<jobname>.o<jobid>`.
+Logs are saved to `Retro/benchmarks/logs/<jobname>.o<jobid>`.
 
 **NEVER** run long benchmarks as background shell processes. Always use `sbatch`.
 
@@ -282,6 +282,33 @@ git checkout -b <your-name>/<next-task>
 - Pull `main` before creating each new branch to avoid merge conflicts
 - Never force-push to `main`
 
+### Rule 14: Per-Task Directory Structure
+
+Every task follows the same self-contained directory layout. Each task has its own benchmark scripts, results, and figures — there is no shared `benchmarks/` or `results/` directory at the repo root.
+
+```
+<Task>/
+├── benchmarks/            # Task-specific benchmark scripts
+│   ├── run.sh             # Conda env switching runner
+│   ├── run_benchmark.py   # Python benchmark runner
+│   ├── carbon_tracker.py  # Carbon/energy measurement
+│   ├── plot_results.py    # Accuracy vs cost plots
+│   ├── slurm_benchmark.sh # Slurm job template
+│   ├── setup_envs.sh      # Environment setup
+│   ├── configs/           # Model configs
+│   └── README.md          # Benchmark results tables
+├── results/
+│   ├── outputs/           # JSON result files (<model>_<N>.json)
+│   └── figures/           # Generated plots (accuracy_vs_*.png)
+├── evaluate.py            # Task-specific evaluation module
+├── data/                  # Test datasets
+├── <ModelA>/              # Model implementations
+├── <ModelB>/
+└── ...
+```
+
+When starting a new task, copy `Retro/benchmarks/` as a template and adapt the TASKS dict, MODEL_ENVS, and MODEL_STYLES for your task's models.
+
 ### Results JSON Schema
 
 Every benchmark run produces a JSON file following this structure:
@@ -334,7 +361,7 @@ Every benchmark run produces a JSON file following this structure:
 }
 ```
 
-Results are saved to `benchmarks/results/<Task>/<model>_<N>.json`.
+Results are saved to `<Task>/results/outputs/<model>_<N>.json`.
 
 ---
 
@@ -352,14 +379,20 @@ Results are saved to `benchmarks/results/<Task>/<model>_<N>.json`.
 
 ```
 Carbon4Science/
-├── benchmarks/        # Shared infrastructure (runner, carbon tracker, configs)
-├── Retro/             # 7 models: neuralsym, LocalRetro, RetroBridge, Chemformer, RSGPT, RSMILES_1x, RSMILES_20x
-├── MolGen/            # Molecule generation models (planned)
-├── MatGen/            # Material generation models (planned)
-└── MLIP/              # ML interatomic potential models (planned)
+├── Retro/             # Retrosynthesis task
+│   ├── benchmarks/    # Benchmark scripts (runner, tracker, plots)
+│   ├── results/
+│   │   ├── outputs/   # JSON result files
+│   │   └── figures/   # Generated plots
+│   ├── neuralsym/
+│   ├── LocalRetro/
+│   └── ...
+├── MolGen/            # Molecule generation — same structure
+├── MatGen/            # Material generation — same structure
+└── MLIP/              # ML interatomic potentials — same structure
 ```
 
-Each task directory is self-contained with its own evaluation module, test data, and model subdirectories. Each model subdirectory has its own conda environment and CLAUDE.md.
+Each task directory is self-contained with its own evaluation module, test data, model subdirectories, and benchmark scripts. Each model subdirectory has its own conda environment and CLAUDE.md.
 
 ## Quick Inference (All Tasks)
 
@@ -379,24 +412,24 @@ results = run(num_samples=100)
 
 ```bash
 # Run benchmark for a single model
-./benchmarks/run.sh --model <ModelName> --limit 1000 --track_carbon
+./Retro/benchmarks/run.sh --model <ModelName> --limit 1000 --track_carbon
 
 # Run all models for a task
-./benchmarks/run.sh --model all --limit 1000 --track_carbon
+./Retro/benchmarks/run.sh --model all --limit 1000 --track_carbon
 
 # Setup all environments
-./benchmarks/setup_envs.sh
+./Retro/benchmarks/setup_envs.sh
 
 # Setup a specific model's environment
-./benchmarks/setup_envs.sh <ModelName>
+./Retro/benchmarks/setup_envs.sh <ModelName>
 ```
 
 ## Carbon Measurement
 
-Use the unified `CarbonTracker` wrapper in `benchmarks/carbon_tracker.py`:
+Use the unified `CarbonTracker` wrapper in `Retro/benchmarks/carbon_tracker.py`:
 
 ```python
-from benchmarks.carbon_tracker import CarbonTracker
+from Retro.benchmarks.carbon_tracker import CarbonTracker
 
 tracker = CarbonTracker(
     project_name="retrosynthesis_neuralsym",

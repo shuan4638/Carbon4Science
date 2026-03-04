@@ -21,8 +21,8 @@ import time
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-# Add parent directory to path
-ROOT_DIR = Path(__file__).resolve().parent.parent
+# Add repository root to path (Retro/benchmarks/ → Retro/ → repo root)
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(ROOT_DIR))
 
 # Task to evaluation module mapping

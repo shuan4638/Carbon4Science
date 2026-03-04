@@ -113,7 +113,7 @@ dependencies:
     - your-package
 ```
 
-2. **Add your model to `benchmarks/setup_envs.sh`**:
+2. **Add your model to `Retro/benchmarks/setup_envs.sh`**:
 
 ```bash
 setup_yourmodel() {
@@ -130,7 +130,7 @@ YourModel|yourmodel) setup_yourmodel ;;
 
 ### Step 5: Register Model in Benchmark Runner
 
-1. **Edit `benchmarks/run.sh`** - Add your model to the environment mapping:
+1. **Edit `Retro/benchmarks/run.sh`** - Add your model to the environment mapping:
 
 ```bash
 declare -A MODEL_ENVS=(
@@ -143,7 +143,7 @@ declare -A MODEL_ENVS=(
 )
 ```
 
-2. **Edit `benchmarks/run_benchmark.py`** - Add your model to the MODELS dict:
+2. **Edit `Retro/benchmarks/run_benchmark.py`** - Add your model to the MODELS dict:
 
 ```python
 MODELS = {
@@ -155,7 +155,7 @@ MODELS = {
 }
 ```
 
-3. **Edit `benchmarks/configs/models.yaml`**:
+3. **Edit `Retro/benchmarks/configs/models.yaml`**:
 
 ```yaml
 YourModel:
@@ -182,7 +182,7 @@ cd benchmarks
 
 # Verify output format
 ./run.sh --model YourModel --smiles "CCO" --output test_output.json
-cat results/test_output.json  # Check format matches specification
+cat Retro/results/outputs/test_output.json  # Check format matches specification
 ```
 
 ### Step 7: Submit Pull Request
@@ -193,7 +193,7 @@ Your PR should include:
 - [ ] `Inference.py` with uniform interface
 - [ ] `environment.yml` or `requirements.txt`
 - [ ] Updates to `setup_envs.sh`, `run.sh`, `run_benchmark.py`, `models.yaml`
-- [ ] Benchmark results in `benchmarks/results/`
+- [ ] Benchmark results in `<Task>/results/outputs/`
 - [ ] Model README with paper reference
 
 ---
@@ -207,7 +207,7 @@ If you have different hardware and want to contribute benchmark results:
 Copy and fill in your hardware configuration:
 
 ```bash
-cp benchmarks/configs/hardware_template.yaml benchmarks/configs/hardware_yourname.yaml
+cp Retro/benchmarks/configs/hardware_template.yaml Retro/benchmarks/configs/hardware_yourname.yaml
 ```
 
 Edit the file:
@@ -240,7 +240,7 @@ for model in neuralsym LocalRetro RetroBridge Chemformer RSGPT; do
         ./run.sh --model $model \
             --input ../data/USPTO_50K/test.csv \
             --track_carbon \
-            --output results/${model}_run${run}_$(date +%Y%m%d).json
+            --output Retro/results/outputs/${model}_run${run}_$(date +%Y%m%d).json
     done
 done
 ```
@@ -281,7 +281,7 @@ Make sure you're running from the repository root:
 
 ```bash
 cd Carbon4Science  # Not from benchmarks/
-python benchmarks/run_benchmark.py --model YourModel --smiles "CCO"
+python Retro/benchmarks/run_benchmark.py --model YourModel --smiles "CCO"
 ```
 
 ### "conda environment not found"

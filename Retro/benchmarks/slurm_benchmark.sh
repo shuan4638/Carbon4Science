@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH -J benchmark            # job name (overridden by --job-name)
-#SBATCH -o benchmarks/logs/%x.o%j  # output file (%x=job name, %j=jobID)
+#SBATCH -o Retro/benchmarks/logs/%x.o%j  # output file (%x=job name, %j=jobID)
 #SBATCH -p 5000_ada             # partition
 #SBATCH -N 1                    # total number of nodes
 #SBATCH -n 4                    # CPU cores
@@ -10,12 +10,12 @@
 #SBATCH --gres=gpu:5000ada:1    # 1 GPU
 
 # Usage:
-#   sbatch --job-name=RSGPT benchmarks/slurm_benchmark.sh RSGPT
-#   sbatch --job-name=RetroBridge benchmarks/slurm_benchmark.sh RetroBridge
-#   sbatch --job-name=Chemformer benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
-#   sbatch --job-name=RSMILES_20x benchmarks/slurm_benchmark.sh RSMILES_20x
+#   sbatch --job-name=RSGPT Retro/benchmarks/slurm_benchmark.sh RSGPT
+#   sbatch --job-name=RetroBridge Retro/benchmarks/slurm_benchmark.sh RetroBridge
+#   sbatch --job-name=Chemformer Retro/benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
+#   sbatch --job-name=RSMILES_20x Retro/benchmarks/slurm_benchmark.sh RSMILES_20x
 
-MODEL=${1:?Usage: sbatch benchmarks/slurm_benchmark.sh MODEL_NAME [extra args...]}
+MODEL=${1:?Usage: sbatch Retro/benchmarks/slurm_benchmark.sh MODEL_NAME [extra args...]}
 shift
 EXTRA_ARGS="$@"
 
@@ -57,8 +57,8 @@ else
     N=5007
 fi
 
-OUTPUT="benchmarks/results/Retro/${MODEL,,}_${N}.json"
-PREDICTIONS="benchmarks/results/Retro/${MODEL,,}_${N}_predictions.json"
+OUTPUT="Retro/results/outputs/${MODEL,,}_${N}.json"
+PREDICTIONS="Retro/results/outputs/${MODEL,,}_${N}_predictions.json"
 
 # Activate conda
 source /home/hakcile/apps/miniconda3/etc/profile.d/conda.sh
@@ -73,7 +73,7 @@ echo "Starting Time is $(date)"
 echo "Conda env: $ENV_NAME"
 echo "Output: $OUTPUT"
 
-PYTHONUNBUFFERED=1 python benchmarks/run_benchmark.py \
+PYTHONUNBUFFERED=1 python Retro/benchmarks/run_benchmark.py \
     --model "$MODEL" \
     --track_carbon \
     --output "$OUTPUT" \

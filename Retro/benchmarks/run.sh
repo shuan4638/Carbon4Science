@@ -43,9 +43,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Get script directory
+# Get script directory (Retro/benchmarks/) and repo root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ROOT_DIR="$(dirname "$SCRIPT_DIR")"
+ROOT_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
 # Function to run benchmark for a single model
 run_model() {
@@ -67,7 +67,7 @@ run_model() {
     conda activate "$env"
 
     cd "$ROOT_DIR"
-    python benchmarks/run_benchmark.py --model "$model" "${ARGS[@]}"
+    python Retro/benchmarks/run_benchmark.py --model "$model" "${ARGS[@]}"
 
     conda deactivate
     echo ""
