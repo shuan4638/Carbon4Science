@@ -48,15 +48,15 @@ Material generation: Generate novel crystal structures and materials.
 
 ### SUN Accuracy vs Carbon Cost
 
-![SUN vs Carbon](../benchmarks/figures/MatGen/accuracy_vs_carbon_panels.png)
+![SUN vs Carbon](./accuracy_vs_carbon_panels.png)
 
 ### SUN Accuracy vs Energy
 
-![SUN vs Energy](../benchmarks/figures/MatGen/accuracy_vs_energy_panels.png)
+![SUN vs Energy](./accuracy_vs_energy_panels.png)
 
 ### SUN Accuracy vs Speed
 
-![SUN vs Speed](../benchmarks/figures/MatGen/accuracy_vs_speed_panels.png)
+![SUN vs Speed](./accuracy_vs_speed_panels.png)
 
 ## Usage
 
