@@ -1,0 +1,18 @@
+{
+  "model": "ChargeDIFF",
+  "total_generated": 1000,
+  "total_relaxed": 1000,
+  "failed_relax": 0,
+  "stable (ehull<=0)": 82,
+  "meta_stable (ehull<=0.1)": 565,
+  "unique": 999,
+  "novel": 744,
+  "msun": 335,
+  "sun": 44,
+  "frac_stable": 0.082,
+  "frac_meta_stable": 0.565,
+  "frac_unique": 0.999,
+  "frac_novel": 0.744,
+  "frac_msun": 0.335,
+  "frac_sun": 0.044
+}

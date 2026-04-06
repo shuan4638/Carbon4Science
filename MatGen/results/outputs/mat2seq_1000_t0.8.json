@@ -1,0 +1,35 @@
+{
+  "task": "MatGen",
+  "model": "Mat2Seq",
+  "num_samples": 1,
+  "top_k": 50,
+  "model_params": 102756352,
+  "metrics": [],
+  "accuracy": {},
+  "correct": {},
+  "carbon": {
+    "start_time": "2026-04-04T19:38:24.712324",
+    "end_time": "2026-04-04T19:46:12.790548",
+    "duration_seconds": 468.07822465896606,
+    "energy_wh": 40.2356,
+    "emissions_g_co2": 16.0942,
+    "gpu_energy_wh": 14.9343,
+    "cpu_energy_wh": 25.1592,
+    "ram_energy_wh": 0.1421,
+    "peak_gpu_memory_mb": 1568.0,
+    "peak_cpu_memory_mb": 2983.6,
+    "project_name": "Mat2Seq_MatGen_benchmark",
+    "model_name": "Mat2Seq",
+    "task": "inference",
+    "hardware": {
+      "gpu_model": "NVIDIA RTX 5000 Ada Generation",
+      "gpu_count": 1,
+      "gpu_memory_gb": 31.9921875,
+      "cpu_model": "INTEL(R) XEON(R) PLATINUM 8558",
+      "cpu_cores": 192,
+      "ram_gb": 503.0359344482422,
+      "cuda_version": "Driver 580.82.09",
+      "platform": "Linux-5.14.0-570.17.1.el9_6.x86_64-x86_64-with-glibc2.34"
+    }
+  }
+}

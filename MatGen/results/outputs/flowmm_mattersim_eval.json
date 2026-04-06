@@ -1,0 +1,18 @@
+{
+  "model": "FlowMM",
+  "total_generated": 1000,
+  "total_relaxed": 926,
+  "failed_relax": 0,
+  "stable (ehull<=0)": 62,
+  "meta_stable (ehull<=0.1)": 334,
+  "unique": 925,
+  "novel": 799,
+  "msun": 221,
+  "sun": 40,
+  "frac_stable": 0.06695464362850972,
+  "frac_meta_stable": 0.36069114470842334,
+  "frac_unique": 0.9989200863930886,
+  "frac_novel": 0.8628509719222462,
+  "frac_msun": 0.2386609071274298,
+  "frac_sun": 0.04319654427645788
+}

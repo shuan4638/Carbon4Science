@@ -1,0 +1,18 @@
+{
+  "model": "CrystaLLM",
+  "total_generated": 546,
+  "total_relaxed": 491,
+  "failed_relax": 50,
+  "stable (ehull<=0)": 65,
+  "meta_stable (ehull<=0.1)": 324,
+  "unique": 461,
+  "novel": 244,
+  "msun": 94,
+  "sun": 17,
+  "frac_stable": 0.13238289205702647,
+  "frac_meta_stable": 0.659877800407332,
+  "frac_unique": 0.9389002036659878,
+  "frac_novel": 0.4969450101832994,
+  "frac_msun": 0.19144602851323828,
+  "frac_sun": 0.034623217922606926
+}

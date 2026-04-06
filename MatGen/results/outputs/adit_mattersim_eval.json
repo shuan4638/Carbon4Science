@@ -1,0 +1,18 @@
+{
+  "model": "ADiT",
+  "total_generated": 1000,
+  "total_relaxed": 933,
+  "failed_relax": 0,
+  "stable (ehull<=0)": 114,
+  "meta_stable (ehull<=0.1)": 634,
+  "unique": 924,
+  "novel": 548,
+  "msun": 276,
+  "sun": 51,
+  "frac_stable": 0.12218649517684887,
+  "frac_meta_stable": 0.6795284030010718,
+  "frac_unique": 0.9903536977491961,
+  "frac_novel": 0.587352625937835,
+  "frac_msun": 0.2958199356913183,
+  "frac_sun": 0.05466237942122187
+}

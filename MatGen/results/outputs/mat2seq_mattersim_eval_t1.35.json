@@ -1,0 +1,18 @@
+{
+  "model": "Mat2Seq",
+  "total_generated": 561,
+  "total_relaxed": 560,
+  "failed_relax": 0,
+  "stable (ehull<=0)": 73,
+  "meta_stable (ehull<=0.1)": 469,
+  "unique": 517,
+  "novel": 81,
+  "msun": 29,
+  "sun": 8,
+  "frac_stable": 0.13035714285714287,
+  "frac_meta_stable": 0.8375,
+  "frac_unique": 0.9232142857142858,
+  "frac_novel": 0.14464285714285716,
+  "frac_msun": 0.05178571428571429,
+  "frac_sun": 0.014285714285714285
+}
