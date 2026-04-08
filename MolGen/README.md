@@ -85,6 +85,12 @@ Models evaluated using their original pre-trained checkpoints and training datas
 |:--------------:|:-----------------------:|
 | ![VUN vs Speed](../benchmarks/figures/MolGen/pretrained/vun_vs_speed.png) | ![SUN Pareto vs Speed](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_speed.png) |
 
+#### Pre-trained Carbon Efficiency Over Time
+
+| ΔCO₂ vs Year (full scale) | ICER (V·U·N) vs Year |
+|:--------------------------:|:--------------------:|
+| ![Delta CO2 Full](../benchmarks/figures/MolGen/pretrained/delta_co2_vs_year_full.png) | ![ICER vs Year](../benchmarks/figures/MolGen/pretrained/icer_vs_year.png) |
+
 ### Benchmark (10,000 molecules, re-trained on ChEMBL 28)
 
 ### Figures
