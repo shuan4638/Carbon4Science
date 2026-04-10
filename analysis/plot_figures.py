@@ -144,7 +144,7 @@ def load_data():
 
 
 # ── Figure 1: Year Trends ─────────────────────────────────────────────────
-def plot_fig1(df):
+def plot_fig1(df, co2_col='CO2_total', co2_label='log₁₀(CO₂/job)'):
     """6 rows (tasks) × 3 cols (model size, CO2, performance)."""
     fig, axes = plt.subplots(6, 3, figsize=(20, 32))
 
@@ -160,7 +160,7 @@ def plot_fig1(df):
         c = TASK_COLORS[task]
         col_specs = [
             ('year', '_size_num',    'log₁₀(Model Size)',       True),
-            ('year', 'CO2_per_call', 'log₁₀(CO₂/call)',        True),
+            ('year', co2_col,        co2_label,                  True),
             ('year', 'performance',  TASK_PERF_LABEL[task],     False),
         ]
         for j, (xcol, ycol, ylabel, use_log10) in enumerate(col_specs):
@@ -224,7 +224,7 @@ def plot_fig1(df):
 
 
 # ── Figure 2: Pareto Frontiers ─────────────────────────────────────────────
-def plot_fig2(df):
+def plot_fig2(df, co2_col='CO2_total', co2_label='log₁₀(CO₂/job)'):
     """2×3 subplots, Δ Performance (%) vs log10(CO2 ratio), with Pareto front."""
     fig, axes = plt.subplots(2, 3, figsize=(20, 14))
     axes = axes.flatten()
@@ -232,10 +232,10 @@ def plot_fig2(df):
     for ax, task in zip(axes, TASK_ORDER):
         grp = df[df['task'] == task].copy()
         base_row = grp[grp['baseline?'] == True].iloc[0]
-        base_co2 = base_row['CO2_per_call']
+        base_co2 = base_row[co2_col]
         base_perf = base_row['performance']
 
-        grp['co2_ratio'] = grp['CO2_per_call'] / base_co2
+        grp['co2_ratio'] = grp[co2_col] / base_co2
         grp['log_co2_ratio'] = np.log10(grp['co2_ratio'])
         grp['delta_perf_pct'] = (grp['performance'] - base_perf) / abs(base_perf) * 100
 
@@ -325,14 +325,14 @@ def plot_fig2(df):
 
 
 # ── Figure 3: CO2 Decomposition ───────────────────────────────────────────
-def plot_fig3(df):
+def plot_fig3(df, co2_col='CO2_total', co2_label='log₁₀(CO₂/job)'):
     """6 rows (tasks) × 3 cols (size vs CO2, time vs CO2, size vs time). No fit lines.
     Uses log10-transformed values on linear axes for clean tick labels."""
     fig, axes = plt.subplots(6, 3, figsize=(20, 32))
 
     panels = [
-        ('_size_num',        'CO2_per_call',     'log₁₀(Model Size)',    'log₁₀(CO₂/call)'),
-        ('inference_time_s', 'CO2_per_call',     'log₁₀(Inference Time)', 'log₁₀(CO₂/call)'),
+        ('_size_num',        co2_col,             'log₁₀(Model Size)',    co2_label),
+        ('inference_time_s', co2_col,            'log₁₀(Inference Time)', co2_label),
         ('_size_num',        'inference_time_s',  'log₁₀(Model Size)',    'log₁₀(Inference Time)'),
     ]
 
@@ -560,7 +560,7 @@ ALT_LABELS = {
 }
 
 
-def plot_fig6(df):
+def plot_fig6(df, co2_col='CO2_total', co2_label='log₁₀(CO₂/job)'):
     """Pareto plots using alternative metrics for 4 tasks."""
     fig, axes = plt.subplots(1, 4, figsize=(28, 7))
 
@@ -577,10 +577,10 @@ def plot_fig6(df):
     for ax, task in zip(axes, ALT_TASK_ORDER):
         grp = df[(df['task'] == task) & df['alt_perf'].notna()].copy()
         base_row = grp[grp['baseline?'] == True].iloc[0]
-        base_co2 = base_row['CO2_per_call']
+        base_co2 = base_row[co2_col]
         base_alt = base_row['alt_perf']
 
-        grp['log_co2_ratio'] = np.log10(grp['CO2_per_call'] / base_co2)
+        grp['log_co2_ratio'] = np.log10(grp[co2_col] / base_co2)
         grp['delta_alt_pct'] = (grp['alt_perf'] - base_alt) / abs(base_alt) * 100
 
         # Pareto front
@@ -673,7 +673,17 @@ if __name__ == '__main__':
     parser.add_argument('--fig', nargs='*', type=int, default=[1, 2, 3, 4, 5, 6],
                         help='Which figures to generate (default: all)')
     parser.add_argument('--dpi', type=int, default=300)
+    parser.add_argument('--co2', choices=['per_call', 'per_job'], default='per_job',
+                        help='CO2 metric: per_call or per_job (default: per_job)')
     args = parser.parse_args()
+
+    # Set CO2 column and label based on argument
+    if args.co2 == 'per_call':
+        co2_col = 'CO2_per_call'
+        co2_label = 'log₁₀(CO₂/call)'
+    else:
+        co2_col = 'CO2_total'
+        co2_label = 'log₁₀(CO₂/job)'
 
     plt.rcParams.update({'font.family': 'sans-serif', 'font.size': 20})
 
@@ -681,18 +691,19 @@ if __name__ == '__main__':
     if any(f in args.fig for f in [1, 2, 3, 5, 6]):
         df = load_data()
         print(f"Loaded {len(df)} data points across {df['task'].nunique()} tasks")
+        print(f"Using CO2 metric: {args.co2} ({co2_col})")
 
     if 1 in args.fig:
-        plot_fig1(df)
+        plot_fig1(df, co2_col, co2_label)
     if 2 in args.fig:
-        plot_fig2(df)
+        plot_fig2(df, co2_col, co2_label)
     if 3 in args.fig:
-        plot_fig3(df)
+        plot_fig3(df, co2_col, co2_label)
     if 4 in args.fig:
         plot_fig4()
     if 5 in args.fig:
         plot_fig5(df)
     if 6 in args.fig:
-        plot_fig6(df)
+        plot_fig6(df, co2_col, co2_label)
 
     print("Done!")
