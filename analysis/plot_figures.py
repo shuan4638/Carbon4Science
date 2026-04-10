@@ -463,7 +463,7 @@ def plot_fig4():
                 ha='right', va='center', fontsize=8.5, fontstyle='italic', color='#777777')
 
     ax.set_xscale('log')
-    ax.set_xlabel('CO₂ Emission (g CO₂ eq)', fontsize=14)
+    ax.set_xlabel('CO₂ Emission', fontsize=14)
     # ax.set_title('CO₂ Emission Reference Points', fontsize=16, fontweight='bold')
     ax.tick_params(labelsize=12)
     ax.set_xlim(0.5, 5e8)
