@@ -14,7 +14,10 @@ Molecular generation: Generate novel molecules from distribution.
 
 - `validity`: Fraction of valid SMILES strings
 - `uniqueness`: Fraction of unique molecules among valid ones
-- `novelty`: Fraction of molecules not in training set
+- `uniqueness_total`: Fraction of unique molecules among **all** generated (total denominator)
+- `novelty`: Fraction of novel molecules among unique valid ones
+- `novelty_total`: Fraction of novel molecules among **all** generated (total denominator)
+- `vuns`: V × U_total × N_total × SA_norm (composite score, total denominator)
 - `sa_score_norm`: Normalized SA Score, (10 − SAScore) / 9, averaged over valid molecules (0=hard, 1=easy)
 - `sa_score_filter`: Fraction of valid molecules with SA Score < 4 (synthesizable)
 
@@ -41,84 +44,61 @@ All models are trained on [ChEMBL 28](https://ftp.ebi.ac.uk/pub/databases/chembl
 
 ## Results
 
-### Benchmark (10,000 molecules)
-
-| Model | Validity | Uniqueness | Novelty | V·U·N (%) | FCD ↓ | CO₂ (g) | Energy (Wh) | ICER (V·U·N) | ICER (FCD) |
-|-------|----------|------------|---------|-----------|-------|---------|-------------|:------------:|:----------:|
-| REINVENT (ref) | 0.9591 | 0.9996 | 0.9505 | 91.12 | 0.281 | 0.11 | 0.26 | 0 | 0 |
-| JT-VAE | 1.0000 | 0.9984 | 0.9964 | 99.48 | 2.644 | 20.45 | 47.49 | +2.228 | +3.240 |
-| HierVAE | 0.9853 | 0.9944 | 0.9541 | 93.48 | 3.205 | 14.39 | 33.42 | +2.102 | +3.171 |
-| MolGPT | 0.9851 | 0.9992 | 0.9523 | 93.73 | 0.839 | 1.85 | 4.30 | +1.211 | +1.698 |
-| DiGress | 0.8019 | 1.0000 | 0.9958 | 79.85 | 1.770 | 391.99 | 910.41 | +3.606 | +4.348 |
-| **REINVENT4** | **0.9860** | **0.9997** | **0.9604** | **94.67** | **0.241** | **0.09** | **0.21** | **−0.100** | **−0.149** |
-| SmileyLlama | 0.9427 | 0.9998 | 0.9980 | 94.06 | 2.410 | 22.67 | 56.68 | +2.297 | +3.244 |
-| DeFoG | 1.0000 | 0.9826 | 0.9920 | 97.47 | 1.235 | 571.96 | 1429.91 | +3.684 | +4.356 |
-
-**ICER** (Incremental Carbon-Effectiveness Ratio) = log<sub>10</sub>((c<sub>i</sub>/c<sub>o</sub>) / (m<sub>i</sub>/m<sub>o</sub>)), where the reference (o) is REINVENT (2017). Lower is more carbon-efficient; negative means better performance with less carbon. For FCD (lower=better), m<sub>i</sub>/m<sub>o</sub> is inverted to FCD<sub>o</sub>/FCD<sub>i</sub>.
-
 ### Pre-trained Benchmark (10,000 molecules)
 
 Models evaluated using their original pre-trained checkpoints and training datasets.
 
-| Model | Validity | Uniqueness | Novelty | SA_norm | SA_filter | V·U·N (%) | S.U.N (%) | CO₂ (g) | Energy (Wh) |
-|-------|----------|------------|---------|---------|-----------|-----------|-----------|---------|-------------|
-| REINVENT | 0.9438 | 0.9997 | 0.9316 | 0.7988 | 0.9193 | 87.90 | 74.40 | 0.18 | 0.41 |
-| JT-VAE | 1.0000 | 0.9991 | 0.9147 | 0.8283 | 0.9801 | 91.39 | 75.70 | 10.58 | 24.58 |
-| HierVAE | 0.9853 | 0.9944 | 0.9400 | 0.8343 | 0.9670 | 92.10 | 77.98 | 11.97 | 27.81 |
-| MolGPT | 0.9937 | 0.9991 | 0.7771 | 0.8372 | 0.9947 | 77.15 | 65.00 | 1.07 | 2.49 |
-| DiGress | 0.8759 | 0.9995 | 0.9417 | 0.8362 | 0.9855 | 82.45 | 78.71 | 175.35 | 407.26 |
-| **REINVENT4** | **0.9806** | **0.9999** | **0.9603** | 0.7878 | 0.9099 | **94.16** | 75.65 | **0.07** | **0.17** |
-| SmileyLlama | 0.9456 | 1.0000 | 0.9968 | 0.7800 | 0.9057 | 94.26 | 77.75 | 21.79 | 54.47 |
-| DeFoG | 0.9155 | 0.9996 | 0.8990 | **0.8446** | **0.9938** | 82.27 | 75.90 | 355.24 | 888.09 |
+#### Valid Denominator (U = unique/valid, N = novel/unique)
 
-#### Pre-trained Figures
+| Model | Validity | Uniqueness | Novelty | SA_norm | V·U·N (%) | S.U.N (%) | VUNS (%) | CO₂ (g) | Energy (Wh) |
+|-------|----------|------------|---------|---------|-----------|-----------|----------|---------|-------------|
+| REINVENT | 0.9438 | 0.9997 | 0.9316 | 0.7988 | 87.90 | 74.40 | 70.22 | 0.18 | 0.41 |
+| JT-VAE | 1.0000 | 0.9991 | 0.9147 | 0.8283 | 91.39 | 75.70 | 75.70 | 10.58 | 24.58 |
+| HierVAE | 0.9853 | 0.9944 | 0.9400 | 0.8343 | 92.10 | 77.98 | **76.84** | 11.97 | 27.81 |
+| MolGPT | 0.9937 | 0.9991 | 0.7771 | 0.8372 | 77.15 | 65.00 | 64.59 | 1.07 | 2.49 |
+| DiGress | 0.8759 | 0.9995 | 0.9417 | 0.8362 | 82.45 | **78.71** | 68.94 | 175.35 | 407.26 |
+| **REINVENT4** | **0.9806** | **0.9999** | **0.9603** | 0.7878 | **94.16** | 75.65 | 74.18 | **0.07** | **0.17** |
+| SmileyLlama | 0.9456 | 1.0000 | 0.9968 | 0.7800 | 94.26 | 77.75 | 73.52 | 21.79 | 54.47 |
+| DeFoG | 0.9155 | 0.9996 | 0.8990 | **0.8446** | 82.27 | 75.90 | 69.49 | 355.24 | 888.09 |
 
-| V·U·N vs Carbon Cost | S.U.N vs Carbon Cost (Pareto) |
-|:---------------------:|:-----------------------------:|
-| ![VUN vs Carbon](../benchmarks/figures/MolGen/pretrained/vun_vs_carbon.png) | ![SUN Pareto vs Carbon](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_carbon.png) |
+| V·U·N vs Carbon | V·U·N vs Energy | V·U·N vs Speed |
+|:----------------:|:---------------:|:--------------:|
+| ![VUN Carbon](../benchmarks/figures/MolGen/pretrained/pareto_vun_vs_carbon.png) | ![VUN Energy](../benchmarks/figures/MolGen/pretrained/pareto_vun_vs_energy.png) | ![VUN Speed](../benchmarks/figures/MolGen/pretrained/pareto_vun_vs_speed.png) |
 
-| V·U·N vs Energy Cost | S.U.N vs Energy Cost (Pareto) |
-|:--------------------:|:-----------------------------:|
-| ![VUN vs Energy](../benchmarks/figures/MolGen/pretrained/vun_vs_energy.png) | ![SUN Pareto vs Energy](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_energy.png) |
+| S.U.N vs Carbon | S.U.N vs Energy | S.U.N vs Speed |
+|:----------------:|:---------------:|:--------------:|
+| ![SUN Carbon](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_carbon.png) | ![SUN Energy](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_energy.png) | ![SUN Speed](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_speed.png) |
 
-| V·U·N vs Speed | S.U.N vs Speed (Pareto) |
-|:--------------:|:-----------------------:|
-| ![VUN vs Speed](../benchmarks/figures/MolGen/pretrained/vun_vs_speed.png) | ![SUN Pareto vs Speed](../benchmarks/figures/MolGen/pretrained/pareto_sun_vs_speed.png) |
+| VUNS vs Carbon | VUNS vs Energy | VUNS vs Speed |
+|:--------------:|:--------------:|:-------------:|
+| ![VUNS Carbon](../benchmarks/figures/MolGen/pretrained/pareto_vuns_vs_carbon.png) | ![VUNS Energy](../benchmarks/figures/MolGen/pretrained/pareto_vuns_vs_energy.png) | ![VUNS Speed](../benchmarks/figures/MolGen/pretrained/pareto_vuns_vs_speed.png) |
 
-#### Pre-trained Carbon Efficiency Over Time
+#### Total Denominator (U = unique/total, N = novel/total)
 
-| ΔCO₂ vs Year (full scale) | ICER (V·U·N) vs Year |
-|:--------------------------:|:--------------------:|
-| ![Delta CO2 Full](../benchmarks/figures/MolGen/pretrained/delta_co2_vs_year_full.png) | ![ICER vs Year](../benchmarks/figures/MolGen/pretrained/icer_vs_year.png) |
+Uniqueness and Novelty computed over **all generated molecules** (not just valid ones). Models with low validity are penalized more heavily.
 
-### Benchmark (10,000 molecules, re-trained on ChEMBL 28)
+| Model | Validity | U (total) | N (total) | SA_norm | V·U·N (%) | VUNS (%) | CO₂ (g) | Energy (Wh) |
+|-------|----------|-----------|-----------|---------|-----------|----------|---------|-------------|
+| REINVENT | 0.9438 | 0.9435 | 0.9435 | 0.7988 | 84.02 | 67.11 | 0.18 | 0.41 |
+| JT-VAE | 1.0000 | 0.9991 | 0.9139 | 0.8283 | 91.31 | 75.63 | 10.58 | 24.58 |
+| HierVAE | 0.9853 | 0.9798 | 0.9210 | 0.8343 | 88.91 | 74.18 | 11.97 | 27.81 |
+| **MolGPT** | 0.9937 | 0.9928 | 0.9928 | 0.8372 | **97.94** | **82.00** | 1.07 | 2.49 |
+| DiGress | 0.8759 | 0.8755 | 0.8755 | 0.8362 | 67.14 | 56.14 | 175.35 | 407.26 |
+| **REINVENT4** | **0.9806** | **0.9805** | **0.9805** | 0.7878 | 94.27 | 74.27 | **0.07** | **0.17** |
+| SmileyLlama | 0.9456 | 0.9456 | 0.9456 | 0.7800 | 84.55 | 65.95 | 21.79 | 54.47 |
+| DeFoG | 0.9155 | 0.9151 | 0.9151 | **0.8446** | 76.66 | 64.75 | 355.24 | 888.09 |
 
-### Figures
+| V·U·N vs Carbon | V·U·N vs Energy | V·U·N vs Speed |
+|:----------------:|:---------------:|:--------------:|
+| ![VUN Carbon](../benchmarks/figures/MolGen/pretrained/total/pareto_vun_vs_carbon.png) | ![VUN Energy](../benchmarks/figures/MolGen/pretrained/total/pareto_vun_vs_energy.png) | ![VUN Speed](../benchmarks/figures/MolGen/pretrained/total/pareto_vun_vs_speed.png) |
 
-#### Performance vs Carbon Cost
-
-| V·U·N vs Carbon Cost | FCD vs Carbon Cost |
-|:---------------------:|:------------------:|
-| ![VUN vs Carbon](results/figures/vun_vs_carbon.png) | ![FCD vs Carbon](results/figures/fcd_vs_carbon.png) |
-
-#### Performance vs Energy Cost
-
-| V·U·N vs Energy Cost | FCD vs Energy Cost |
-|:--------------------:|:------------------:|
-| ![VUN vs Energy](results/figures/vun_vs_energy.png) | ![FCD vs Energy](results/figures/fcd_vs_energy.png) |
-
-#### Performance vs Speed
-
-| V·U·N vs Speed | FCD vs Speed |
-|:--------------:|:------------:|
-| ![VUN vs Speed](results/figures/vun_vs_speed.png) | ![FCD vs Speed](results/figures/fcd_vs_speed.png) |
+| VUNS vs Carbon | VUNS vs Energy | VUNS vs Speed |
+|:--------------:|:--------------:|:-------------:|
+| ![VUNS Carbon](../benchmarks/figures/MolGen/pretrained/total/pareto_vuns_vs_carbon.png) | ![VUNS Energy](../benchmarks/figures/MolGen/pretrained/total/pareto_vuns_vs_energy.png) | ![VUNS Speed](../benchmarks/figures/MolGen/pretrained/total/pareto_vuns_vs_speed.png) |
 
 #### Carbon Efficiency Over Time
 
-| ΔCO₂ vs Year (full scale) | ΔCO₂ vs Year (broken axis) |
-|:--------------------------:|:--------------------------:|
-| ![Delta CO2 Full](results/figures/delta_co2_vs_year_full.png) | ![Delta CO2 Wavy](results/figures/delta_co2_vs_year_wavy.png) |
+| ΔCO₂ vs Year (full scale) |
+|:--------------------------:|
+| ![Delta CO2 Full](../benchmarks/figures/MolGen/pretrained/delta_co2_vs_year_full.png) |
 
-| ICER vs Year |
-|:------------:|
-| ![ICER vs Year](results/figures/icer_vs_year.png) |
