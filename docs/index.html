@@ -943,12 +943,12 @@ const REF_DATA = [
   { category: 'LLM inference',           label: 'Text generation',          desc: 'Claude-3.7 Sonnet',             value: 2.12,    unit: '10k in & 1.5k out', taskKey: null },
   { category: 'Everyday activities',     label: 'Smartphone charge',        desc: 'iPhone 16 Pro Max',             value: 9.7,     unit: 'full charge',        taskKey: null },
   { category: 'Chemical simulation',     label: 'Classical MD',             desc: 'force field',                   value: 10,      unit: '1M steps',           taskKey: null },
-  { category: 'AI Synthesis prediction', label: 'Reaction outcome pred.',   desc: 'LlaSMol (best: neuralsym)',     value: 17.67,   unit: '500 inputs',         taskKey: 'Forward' },
+  { category: 'AI Synthesis prediction', label: 'Reaction outcome pred.',   desc: 'USPTO-MIT · 500 inputs',        value: 17.67,   unit: '500 inputs',         taskKey: 'Forward' },
   { category: 'Everyday activities',     label: 'Driving a car',            desc: 'EU average',                    value: 170,     unit: 'km',                 taskKey: null },
-  { category: 'AI Chemical generation',  label: 'Material generation',      desc: 'CDVAE (best: CrystalFlow)',     value: 270.40,  unit: '1K structures',      taskKey: 'MatGen' },
-  { category: 'AI Chemical generation',  label: 'Molecule generation',      desc: 'DeFoG (best: REINVENT4)',       value: 355.24,  unit: '10K molecules',      taskKey: 'MolGen' },
-  { category: 'AI Synthesis prediction', label: 'Synthesis Planning',       desc: 'RetroBridge (best: neuralsym)', value: 403.45,  unit: '500 molecules',      taskKey: 'Retro' },
-  { category: 'AI MD simulation',        label: 'MLIP simulation',          desc: 'eSEN (best: ORB)',              value: 3486,    unit: '1M steps',           taskKey: 'StructOpt' },
+  { category: 'AI Chemical generation',  label: 'Material generation',      desc: 'MP-20 · 1K structures',         value: 270.40,  unit: '1K structures',      taskKey: 'MatGen' },
+  { category: 'AI Chemical generation',  label: 'Molecule generation',      desc: 'ChEMBL 28 · 10K molecules',     value: 355.24,  unit: '10K molecules',      taskKey: 'MolGen' },
+  { category: 'AI Synthesis prediction', label: 'Synthesis Planning',       desc: 'USPTO-50K · 500 molecules',     value: 403.45,  unit: '500 molecules',      taskKey: 'Retro' },
+  { category: 'AI MD simulation',        label: 'MLIP simulation',          desc: 'LGPS · 1M steps',               value: 3486,    unit: '1M steps',           taskKey: 'StructOpt' },
   { category: 'Chemical synthesis',      label: 'Battery synthesis',        desc: 'Vanadium flow battery',         value: 37000,   unit: 'MWh',                taskKey: null },
   { category: 'Chemical synthesis',      label: 'Material synthesis',       desc: 'UiO-66-NH₂ (aqueous-based)',    value: 43000,   unit: 'kg',                 taskKey: null },
   { category: 'Chemical simulation',     label: 'Ab initio MD',             desc: 'PBE (50 atoms)',                value: 140960,  unit: '1M steps',           taskKey: null },
@@ -979,13 +979,17 @@ function renderChart() {
 /* ── CO₂ Reference Points (All tab) ── */
 function renderRefChart() {
   document.getElementById('chart-title').textContent = 'CO₂ eq. Emission Reference Points';
-  document.getElementById('chart-hint').textContent  = 'Log scale · Error bars show range across all models · Hover for details';
+  document.getElementById('chart-hint').textContent  = 'Log scale · Bar tip = worst Pareto-optimal model · Error bar extends to cheapest model · Hover for details';
 
-  // Pre-compute min/max CO2_per_job per task for error bars
+  // Bar tip = worst Pareto-optimal model; error bar extends left to cheapest model overall
   const taskRanges = {};
   Object.keys(TASK_CONFIG).forEach(t => {
-    const vals = ALL_DATA.filter(r => r.task === t).map(r => r.CO2_per_job);
-    if (vals.length) taskRanges[t] = { min: Math.min(...vals), max: Math.max(...vals) };
+    const allRows    = ALL_DATA.filter(r => r.task === t);
+    const paretoRows = allRows.filter(r => GLOBAL_PARETO.has(r));
+    if (!paretoRows.length) return;
+    const allVals    = allRows.map(r => r.CO2_per_job);
+    const worstPareto = paretoRows.reduce((a, b) => a.CO2_per_job > b.CO2_per_job ? a : b);
+    taskRanges[t] = { min: Math.min(...allVals), max: worstPareto.CO2_per_job, worstModel: worstPareto.model };
   });
   // MDSim shares models with StructOpt — merge their ranges
   if (taskRanges['MDSim'] && taskRanges['StructOpt']) {
@@ -996,12 +1000,13 @@ function renderRefChart() {
     taskRanges['MDSim'] = taskRanges['StructOpt'] = merged;
   }
 
-  // For AI entries, bar = task max; error bar extends left to task min
+  // For AI entries, bar = worst Pareto CO₂; error bar extends left to cheapest model
   const sorted = REF_DATA.map(d => {
     if (d.taskKey && taskRanges[d.taskKey]) {
-      return { ...d, _barVal: taskRanges[d.taskKey].max, _errMinus: taskRanges[d.taskKey].max - taskRanges[d.taskKey].min };
+      const rng = taskRanges[d.taskKey];
+      return { ...d, _barVal: rng.max, _errMinus: rng.max - rng.min, _worstModel: rng.worstModel };
     }
-    return { ...d, _barVal: d.value, _errMinus: 0 };
+    return { ...d, _barVal: d.value, _errMinus: 0, _worstModel: null };
   });
 
   const barPx = 42;
@@ -1013,11 +1018,11 @@ function renderRefChart() {
   const customs = sorted.map(d => {
     const rng = d.taskKey && taskRanges[d.taskKey];
     return {
-      desc:  d.desc,
+      desc:  d._worstModel ? `${d._worstModel} (Pareto worst)` : d.desc,
       unit:  d.unit,
       cat:   d.category,
       valFmt: fmtCO2(d._barVal),
-      range: rng ? `${fmtCO2(taskRanges[d.taskKey].min)} – ${fmtCO2(d._barVal)}` : '',
+      range: rng ? `Full range: ${fmtCO2(taskRanges[d.taskKey].min)} – ${fmtCO2(d._barVal)}` : '',
     };
   });
 
@@ -1093,7 +1098,7 @@ function renderRefChart() {
       y:        d.label,
       xref:     'x',
       yref:     'y',
-      text:     fmtCO2(d._barVal),
+      text:     d._worstModel ? `${d._worstModel} (${fmtCO2(d._barVal)})` : fmtCO2(d._barVal),
       xanchor:  'left',
       yanchor:  'middle',
       xshift:   7,

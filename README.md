@@ -4,9 +4,16 @@
   <img src="docs/noah.svg" alt="Carbon4Science logo" width="120" />
 </p>
 
-[![Website](https://img.shields.io/badge/Website-carbon4science-green.svg)](https://shuan4638.github.io/Carbon4Science/)
-[![Paper](https://img.shields.io/badge/Paper-arXiv-red.svg)](https://arxiv.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <a href="https://shuan4638.github.io/Carbon4Science/">
+    <img src="https://img.shields.io/badge/🌐%20Live%20Leaderboard-carbon4science.github.io-059669?style=for-the-badge" alt="Live Leaderboard" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://arxiv.org/"><img src="https://img.shields.io/badge/Paper-arXiv-red.svg" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+</p>
 
 A benchmarking framework that jointly evaluates **predictive accuracy** and **carbon footprint** of generative AI models across six scientific discovery tasks.
 
