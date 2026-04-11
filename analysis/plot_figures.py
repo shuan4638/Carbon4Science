@@ -295,15 +295,15 @@ def plot_fig2(df, co2_col='CO2_per_job', co2_label='log₁₀(CO₂/job)'):
 
 
 # ── Figure 3: CO2 Decomposition ───────────────────────────────────────────
-def plot_fig3(df, co2_col='CO2_per_job', co2_label='log₁₀(CO₂/job)'):
+def plot_fig3(df, co2_col='CO2_per_exp', co2_label='log₁₀(CO₂/exp)'):
     """6 rows (tasks) × 3 cols (size vs CO2, time vs CO2, size vs time). No fit lines.
     Uses log10-transformed values on linear axes for clean tick labels."""
     fig, axes = plt.subplots(6, 3, figsize=(20, 32))
 
     panels = [
-        ('_size_num',                co2_col,                   'log₁₀(Model Size)',    co2_label),
-        ('inference_time_per_exp',   co2_col,                   'log₁₀(Inference Time)', co2_label),
-        ('_size_num',                'inference_time_per_exp',  'log₁₀(Model Size)',    'log₁₀(Inference Time)'),
+        ('_size_num',                co2_col,                   'log₁₀(Model Size)',         co2_label),
+        ('inference_time_per_exp',   co2_col,                   'log₁₀(Inference Time/exp)', co2_label),
+        ('_size_num',                'inference_time_per_exp',  'log₁₀(Model Size)',         'log₁₀(Inference Time/exp)'),
     ]
 
     # Compute shared x-limits per column across all tasks
