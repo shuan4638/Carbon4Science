@@ -1170,7 +1170,7 @@ function renderScatterChart(task) {
         '<b>%{customdata.model}</b> <i>(%{customdata.year})</i>',
         '%{customdata.arch} · %{customdata.size} · %{customdata.venue}',
         '%{customdata.mlabel}: <b>%{customdata.metric}</b>',
-        'CO₂/job: <b>%{x:.2f} g</b>',
+        'CO₂/job: <b>%{customdata.co2:.2f} g</b>',
         'Time/exp: %{customdata.time}',
         '<extra>%{customdata.pareto ? "⚡ Pareto-optimal" : ""}</extra>',
       ].join('<br>'),
