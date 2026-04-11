@@ -1,4 +1,4 @@
-# The Carbon Cost of Generative AI for Science
+# The Carbon Cost of AI for Science
 
 [![Paper](https://img.shields.io/badge/Paper-arXiv-red.svg)](https://arxiv.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -194,7 +194,7 @@ Your PR to `main` only needs: `results/<Task>/<model>_<N>.json` + a new row in t
 
 ```bibtex
 @article{carbon2026,
-  title={The Carbon Cost of Generative AI for Science},
+  title={The Carbon Cost of AI for Science},
   author={...},
   journal={...},
   year={2026}
