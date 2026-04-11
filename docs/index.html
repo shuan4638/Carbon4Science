@@ -510,8 +510,8 @@ const ARCH_SYMBOLS = {
   LM:             'triangle-up',
   LLM:            'star',
   VAE:            'square',
-  Diffusion:      'pentagon',
-  'Flow Matching': 'cross',
+  Diffusion:      'cross',
+  'Flow Matching': 'pentagon',
 };
 
 const ARCH_COLORS = {
@@ -1145,7 +1145,7 @@ function renderScatterChart(task) {
       y: rows.map(r => r.major_metric),
       marker: {
         symbol:  ARCH_SYMBOLS[arch] || 'circle',
-        size:    rows.map(r => GLOBAL_PARETO.has(r) ? 14 : 9),
+        size:    rows.map(r => GLOBAL_PARETO.has(r) ? 10 : 9),
         color:   rows.map(r => GLOBAL_PARETO.has(r) ? cfg.color : hexToRgba(cfg.color, 0.55)),
         line: {
           color: rows.map(r => GLOBAL_PARETO.has(r) ? darkenHex(cfg.color, 40) : cfg.color),
