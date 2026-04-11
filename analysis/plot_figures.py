@@ -466,7 +466,7 @@ def plot_fig5(df):
         for task, grp in df.groupby('task'):
             c = TASK_COLORS[task]
             for _, row in grp.iterrows():
-                xv, yv = row[xcol], row['CO2_per_job']
+                xv, yv = row[xcol], row['CO2_per_exp']
                 if pd.isna(xv) or pd.isna(yv) or xv <= 0 or yv <= 0:
                     continue
                 lx, ly = np.log10(xv), np.log10(yv)
@@ -489,7 +489,7 @@ def plot_fig5(df):
                           bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
 
         panel_ax.set_xlabel(xlabel, fontsize=20)
-        panel_ax.set_ylabel('log₁₀(CO₂/job)', fontsize=20)
+        panel_ax.set_ylabel('log₁₀(CO₂/exp)', fontsize=20)
         panel_ax.tick_params(labelsize=16)
         panel_ax.spines['top'].set_visible(False)
         panel_ax.spines['right'].set_visible(False)
