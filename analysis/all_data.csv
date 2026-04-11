@@ -26,10 +26,10 @@ Retro,2025,Nat. Commun.,RSGPT,LLM,1.6B,97.8,0.5016,g/mol,79024,251.17,FALSE
 Forward,2017,Chem. Eur. J.,neuralsym,MLP,98.1M,50.6,0.0011,g/mol,34.15,0.55,TRUE
 Forward,2019,ACS Cent. Sci.,MolecularTransformer,LM,11.7M,91.7,0.009,g/mol,154,4.5,FALSE
 Forward,2021,JCIM,MEGAN,GNN,9.9M,86.4,0.0021,g/mol,83.2,1.05,FALSE
-Forward,2022,ML:ST,Chemformer,LM,44.7M,90.3,0.0174,g/mol,490,8.7,FALSE
+Forward,2022,ML:ST,Chemformer,LM,44.7M,89.8,0.0145,g/mol,566,7.25,FALSE
 Forward,2022,Chem. Sci.,RSMILES,LM,44.6M,94.7,0.0154,g/mol,578,7.7,FALSE
-Forward,2022,JCIM,Graph2SMILES,LM,18M,89.9,0.0074,g/mol,221,3.7,FALSE
-Forward,2022,Nat. Mach. Intell.,LocalTransform,GNN,9.1M,95.1,0.0072,g/mol,222.5,3.55,FALSE
+Forward,2022,JCIM,Graph2SMILES,LM,18M,89.9,0.0072,g/mol,99,3.60,FALSE
+Forward,2022,Nat. Mach. Intell.,LocalTransform,GNN,9.1M,92.1,0.0071,g/mol,222.5,3.54,FALSE
 Forward,2024,COLM,LlaSMol,LLM,7.2B,5.9,0.0353,g/mol,1312,17.65,FALSE
 StructOpt,2023,Nat. Mach. Intell.,CHGNet,GNN,413K,0.343,0.000379,g/ step,28386.66667,379,TRUE
 StructOpt,2023,arXiv,MACE,GNN,4.69M,0.637,0.000932,g/ step,51093.33333,932,FALSE
