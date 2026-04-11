@@ -68,7 +68,7 @@ All tasks benchmarked on the same hardware with full carbon tracking.
 |------|-------|-------|-------------|--------|--------|--------|------------|------------|-------------|-------------|
 | 2017 | Chem. Eur. J. | neuralsym | MLP | 32.5M | 72.8% | 74.8% | 35.0 | 3.50 | 1,282 | 128 |
 | 2021 | JCIM | MEGAN | GNN | 9.8M | 87.0% | 90.1% | 51.7 | 5.15 | 2,951 | 295 |
-| 2021 | JACS Au | LocalRetro | GNN | 8.6M | 91.5% | 95.6% | 62.1 | 6.20 | 2,313 | 231 |
+| 2021 | JACS Au | LocalRetro | GNN | 8.6M | 90.4% | 97.3% | 62.1 | 6.20 | 2,313 | 231 |
 | 2022 | Chem. Sci. | RSMILES | LM | 44.6M | 89.6% | 93.0% | 1,083 | 108.25 | 44,142 | 4,401 |
 | 2022 | ML:ST | Chemformer | LM | 44.7M | 62.8% | 64.0% | 2,570 | 256.65 | 85,055 | 8,482 |
 | 2024 | COLM | LlaSMol | LLM | ~7.2B | 5.0% | 5.0% | 1,385 | 138.35 | 39,119 | 3,905 |
@@ -121,7 +121,7 @@ All tasks benchmarked on the same hardware with full carbon tracking.
 | 2023 | NeurIPS | DiffCSP | Diffusion | 12.4M | 29.0 | 4.3 | 12.7 | 12.60 | 381 | 381 |
 | 2024 | Nat. Commun. | CrystaLLM | LM | 25.9M | 16.4 | 3.5 | 19.3 | 19.20 | 942 | 942 |
 | 2024 | ICML | FlowMM | Flow Matching | 28.3M | 23.9 | 4.3 | 12.8 | 12.80 | 547 | 547 |
-| 2024 | NeurIPS | **ChargeDIFF** | Diffusion | 59.5M | **33.5** | 4.4 | 133.5 | 133.50 | 2,994 | 2,994 |
+| 2025 | arXiv | **ChargeDIFF** | Diffusion | 59.5M | **33.5** | 4.4 | 133.5 | 133.50 | 2,994 | 2,994 |
 | 2025 | Nature | MatterGen | Diffusion | 44.6M | 33.4 | **5.2** | 248.1 | 248.10 | 8,079 | 8,079 |
 | 2025 | ICML | ADiT | Diffusion | 231.9M | 29.6 | **5.5** | 112.5 | 112.50 | 10,512 | 10,512 |
 | 2025 | ICML | CrystalFlow | Flow Matching | 20.9M | 21.7 | 3.0 | **1.5** | **1.50** | **43** | **43** |
