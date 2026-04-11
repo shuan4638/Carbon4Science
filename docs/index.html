@@ -1018,11 +1018,11 @@ function renderRefChart() {
   const customs = sorted.map(d => {
     const rng = d.taskKey && taskRanges[d.taskKey];
     return {
-      desc:  d._worstModel ? `${d._worstModel} (Pareto worst)` : d.desc,
+      desc:  d._worstModel ? d._worstModel : d.desc,
       unit:  d.unit,
       cat:   d.category,
       valFmt: fmtCO2(d._barVal),
-      range: rng ? `Full range: ${fmtCO2(taskRanges[d.taskKey].min)} – ${fmtCO2(d._barVal)}` : '',
+      range: '',
     };
   });
 
@@ -1046,7 +1046,6 @@ function renderRefChart() {
       '<b>%{y}</b><br>' +
       '%{customdata.desc}<br>' +
       '<b>%{customdata.valFmt}</b> / %{customdata.unit}<br>' +
-      '%{customdata.range}<br>' +
       '<i>%{customdata.cat}</i>' +
       '<extra></extra>',
     showlegend: false,
@@ -1098,7 +1097,7 @@ function renderRefChart() {
       y:        d.label,
       xref:     'x',
       yref:     'y',
-      text:     d._worstModel ? `${d._worstModel} (${fmtCO2(d._barVal)})` : fmtCO2(d._barVal),
+      text:     fmtCO2(d._barVal),
       xanchor:  'left',
       yanchor:  'middle',
       xshift:   7,

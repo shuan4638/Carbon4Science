@@ -388,25 +388,74 @@ def plot_fig3(df, co2_col='CO2_per_exp', co2_label='log₁₀(CO₂/exp)'):
 
 
 # ── Figure 4: CO2 Reference Points ────────────────────────────────────────
-def plot_fig4():
-    """Horizontal bar chart of CO2 reference points, ordered by magnitude."""
-    # (category, main_label, description, co2_grams, unit)
-    ref_data = [
-        ('LLM inference',            'Image generation',         'Stable Diffusion',   1.38,    'image'),
-        ('LLM inference',            'Text generation',          'Claude-3.7 Sonnet',  2.12,    '10k in & 1.5k out'),
-        ('AI Synthesis prediction',  'Reaction outcome pred.',   'LlaSMol',            17.7,    '500 inputs'),
-        ('Everyday activities',      'Smartphone charge',        'iPhone 16 Pro Max',   9.7,    'full charge'),
-        ('Chemical simulation',      'Classical MD',             'force field',         10,     '1M steps'),
-        ('AI Chemical generation',   'Material generation',      'MatterGen',         248,     '1K strcutures'),
-        ('Everyday activities',      'Driving a car',            'EU average',         170,     'km'),
-        ('AI Synthesis prediction',  'Synthesis Planning',       'RetroBridge',        403,     '500 molecules'),
-        ('AI Chemical generation',   'Molecule generation',      'DeFoG',              355.2,  '10K molecules'),
-        ('AI MD simulation',         'MLIP simulation',         'eSEN',              3486,     '1M steps'),
-        ('Chemical synthesis',       'Battery synthesis',        'Vanadium flow battery', 37000, 'MWh'),
-        ('Chemical synthesis',       'Material synthesis',       'UiO-66-NH₂ (aqueous-based) ',       43000,    'kg'),
-        ('Chemical simulation',      'Ab initio MD',             'PBE (50 atoms)',   140960,    '1M steps'),
-        ('Chemical synthesis',       'Organic synthesis',        'Letermovir (Merck)',  382000,    'kg'),
+def _compute_pareto(grp):
+    """Return set of model names that are Pareto-optimal (higher metric, lower CO2)."""
+    pareto = set()
+    rows = grp.to_dict('records')
+    for r in rows:
+        dominated = any(
+            o['major_metric'] >= r['major_metric'] and o['CO2_per_job'] <= r['CO2_per_job'] and
+            (o['major_metric'] > r['major_metric'] or o['CO2_per_job'] < r['CO2_per_job'])
+            for o in rows if o is not r
+        )
+        if not dominated:
+            pareto.add(r['model'])
+    return pareto
+
+
+def plot_fig4(df):
+    """Horizontal bar chart of CO2 reference points, ordered by magnitude.
+    For AI task entries, the bar and description show the worst Pareto-optimal model."""
+
+    # Compute worst Pareto model per task
+    # StructOpt and MDSim share models — merge them
+    task_map = {
+        'Forward':   'Forward',
+        'Retro':     'Retro',
+        'MolGen':    'MolGen',
+        'MatGen':    'MatGen',
+        'StructOpt': 'StructOpt',
+    }
+    worst_pareto = {}  # task -> (model_name, co2_per_job)
+    for task, key in task_map.items():
+        grp = df[df['task'] == task].copy()
+        if task == 'StructOpt':
+            grp = df[df['task'].isin(['StructOpt', 'MDSim'])].drop_duplicates('model')
+        if grp.empty:
+            continue
+        pareto_models = _compute_pareto(grp)
+        pareto_grp = grp[grp['model'].isin(pareto_models)]
+        worst = pareto_grp.loc[pareto_grp['CO2_per_job'].idxmax()]
+        worst_pareto[key] = (worst['model'], worst['CO2_per_job'])
+
+    # (category, main_label, task_key, fallback_desc, fallback_co2, unit)
+    # task_key=None for non-AI entries
+    ref_data_raw = [
+        ('LLM inference',            'Image generation',         None,         'Stable Diffusion',            1.38,    'image'),
+        ('LLM inference',            'Text generation',          None,         'Claude-3.7 Sonnet',           2.12,    '10k in & 1.5k out'),
+        ('Everyday activities',      'Smartphone charge',        None,         'iPhone 16 Pro Max',            9.7,    'full charge'),
+        ('Chemical simulation',      'Classical MD',             None,         'force field',                  10,     '1M steps'),
+        ('AI Synthesis prediction',  'Reaction outcome pred.',   'Forward',    'LlaSMol',                     17.7,    '500 inputs'),
+        ('Everyday activities',      'Driving a car',            None,         'EU average',                  170,     'km'),
+        ('AI Chemical generation',   'Material generation',      'MatGen',     'MatterGen',                   248,     '1K structures'),
+        ('AI Chemical generation',   'Molecule generation',      'MolGen',     'DeFoG',                       355.2,  '10K molecules'),
+        ('AI Synthesis prediction',  'Synthesis Planning',       'Retro',      'RetroBridge',                 403,     '500 molecules'),
+        ('AI MD simulation',         'MLIP simulation',          'StructOpt',  'eSEN',                        3486,    '1M steps'),
+        ('Chemical synthesis',       'Battery synthesis',        None,         'Vanadium flow battery',       37000,   'MWh'),
+        ('Chemical synthesis',       'Material synthesis',       None,         'UiO-66-NH₂ (aqueous-based)',  43000,   'kg'),
+        ('Chemical simulation',      'Ab initio MD',             None,         'PBE (50 atoms)',              140960,  '1M steps'),
+        ('Chemical synthesis',       'Organic synthesis',        None,         'Letermovir (Merck)',           382000,  'kg'),
     ]
+
+    # Resolve AI entries to worst Pareto model
+    ref_data = []
+    for (cat, label, task_key, fallback_desc, fallback_co2, unit) in ref_data_raw:
+        if task_key and task_key in worst_pareto:
+            model_name, co2 = worst_pareto[task_key]
+            ref_data.append((cat, label, model_name, co2, unit))
+        else:
+            ref_data.append((cat, label, fallback_desc, fallback_co2, unit))
+
     ref_data.sort(key=lambda x: x[3])
 
     categories  = [d[0] for d in ref_data]
@@ -658,7 +707,7 @@ if __name__ == '__main__':
     plt.rcParams.update({'font.family': 'sans-serif', 'font.size': 20})
 
     df = None
-    if any(f in args.fig for f in [1, 2, 3, 5, 6]):
+    if any(f in args.fig for f in [1, 2, 3, 4, 5, 6]):
         df = load_data()
         print(f"Loaded {len(df)} data points across {df['task'].nunique()} tasks")
         print(f"Using CO2 metric: {args.co2} ({co2_col})")
@@ -670,7 +719,7 @@ if __name__ == '__main__':
     if 3 in args.fig:
         plot_fig3(df)
     if 4 in args.fig:
-        plot_fig4()
+        plot_fig4(df)
     if 5 in args.fig:
         plot_fig5(df)
     if 6 in args.fig:
