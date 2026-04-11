@@ -668,7 +668,7 @@ if __name__ == '__main__':
     if 2 in args.fig:
         plot_fig2(df, co2_col, co2_label)
     if 3 in args.fig:
-        plot_fig3(df, co2_col, co2_label)
+        plot_fig3(df)
     if 4 in args.fig:
         plot_fig4()
     if 5 in args.fig:
