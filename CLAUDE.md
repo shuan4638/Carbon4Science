@@ -40,7 +40,7 @@ Each model has its own conda environment. **NEVER** suggest installing packages 
 
 Other tasks (MolGen, MatGen, MLIP) follow the same pattern: one conda env per model.
 
-When running models, use: `./Retro/benchmarks/run.sh --model <name>` (handles env switching automatically)
+When running models, use: `./Example/benchmarks/run.sh --model <name>` (handles env switching automatically)
 
 ### Rule 3: Benchmark Runner
 
@@ -48,10 +48,10 @@ When running models, use: `./Retro/benchmarks/run.sh --model <name>` (handles en
 
 ```bash
 # Correct
-./Retro/benchmarks/run.sh --model neuralsym --limit 1000 --track_carbon
+./Example/benchmarks/run.sh --model neuralsym --limit 1000 --track_carbon
 
 # Wrong - will fail due to environment issues
-python Retro/benchmarks/run_benchmark.py --model neuralsym
+python Example/benchmarks/run_benchmark.py --model neuralsym
 ```
 
 ### Rule 4: Adding New Models
@@ -71,7 +71,7 @@ When adding a new model, you MUST update ALL of these files:
 When running benchmarks, ALWAYS include `--track_carbon` flag:
 
 ```bash
-./Retro/benchmarks/run.sh --model LocalRetro --limit 1000 --track_carbon
+./Example/benchmarks/run.sh --model LocalRetro --limit 1000 --track_carbon
 ```
 
 ### Rule 6: Device Selection
@@ -95,7 +95,7 @@ The benchmark runner dynamically loads the correct evaluator based on the `--tas
 
 When a task leader asks to benchmark their task end-to-end, follow these phases in order:
 
-1. **Setup** — Create task directory structure (`<Task>/`, `<Task>/data/`, `<Task>/results/outputs/`, `<Task>/results/figures/`, `<Task>/benchmarks/`, model subdirectories). Copy benchmark scripts from `Retro/benchmarks/` as a starting template.
+1. **Setup** — Create task directory structure (`<Task>/`, `<Task>/data/`, `<Task>/results/outputs/`, `<Task>/results/figures/`, `<Task>/benchmarks/`, model subdirectories). Copy benchmark scripts from `Example/benchmarks/` as a starting template.
 2. **Evaluate** — Implement `<Task>/evaluate.py` with `METRICS`, `load_test_data()`, and `evaluate()`
 3. **Models** — For each model, implement `Inference.py` with the uniform `run()` interface, create `environment.yml`, and write `CLAUDE.md`
 4. **Register** — Add all models to `<Task>/benchmarks/run_benchmark.py` (TASKS dict), `<Task>/benchmarks/run.sh` (MODEL_ENVS), `<Task>/benchmarks/setup_envs.sh`, `<Task>/benchmarks/configs/models.yaml`, and `<Task>/benchmarks/plot_results.py` (MODEL_STYLES)
@@ -137,7 +137,7 @@ MODEL_STYLES = {
 
 ### Rule 11: Reporting Format
 
-After running all benchmarks for a task, produce the following standardized deliverables. Use the `Retro/` results as the reference.
+After running all benchmarks for a task, produce the following standardized deliverables. Use the `Example/` results as the reference.
 
 #### Three Comparison Tables in `<Task>/benchmarks/README.md`
 
@@ -199,17 +199,17 @@ This creates 6 files in `<Task>/results/figures/`:
 
 ### Rule 12: Slurm Job Submission
 
-**ALWAYS** submit benchmark runs via Slurm instead of running them as background processes. Use `Retro/benchmarks/slurm_benchmark.sh`:
+**ALWAYS** submit benchmark runs via Slurm instead of running them as background processes. Use `Example/benchmarks/slurm_benchmark.sh`:
 
 ```bash
 # Single model
-sbatch --job-name=RSGPT Retro/benchmarks/slurm_benchmark.sh RSGPT
+sbatch --job-name=RSGPT Example/benchmarks/slurm_benchmark.sh RSGPT
 
 # Chemformer with proper test set (pickle)
-sbatch --job-name=Chemformer Retro/benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
+sbatch --job-name=Chemformer Example/benchmarks/slurm_benchmark.sh Chemformer --data Retro/data/uspto_50_chemforner.pickle
 
 # R-SMILES variants
-sbatch --job-name=RSMILES_20x Retro/benchmarks/slurm_benchmark.sh RSMILES_20x
+sbatch --job-name=RSMILES_20x Example/benchmarks/slurm_benchmark.sh RSMILES_20x
 
 # Check job status
 squeue -u $USER
@@ -221,7 +221,7 @@ squeue -u $USER
 - Max walltime: 72 hours (GPU), 48 hours (CPU)
 - Override memory with `--mem=32G` for large models (e.g., RSGPT 1B)
 
-Logs are saved to `Retro/benchmarks/logs/<jobname>.o<jobid>`.
+Logs are saved to `Example/benchmarks/logs/<jobname>.o<jobid>`.
 
 **NEVER** run long benchmarks as background shell processes. Always use `sbatch`.
 
@@ -307,7 +307,7 @@ Every task follows the same self-contained directory layout. Each task has its o
 └── ...
 ```
 
-When starting a new task, copy `Retro/benchmarks/` as a template and adapt the TASKS dict, MODEL_ENVS, and MODEL_STYLES for your task's models.
+When starting a new task, copy `Example/benchmarks/` as a template and adapt the TASKS dict, MODEL_ENVS, and MODEL_STYLES for your task's models.
 
 ### Results JSON Schema
 
@@ -370,7 +370,7 @@ Results are saved to `<Task>/results/outputs/<model>_<N>.json`.
 **Carbon4Science** benchmarks both predictive performance AND carbon efficiency of generative AI models for scientific discovery.
 
 **Four Tasks:**
-1. **Retrosynthesis** (`Retro/`) - Predict reactants from product molecules
+1. **Retrosynthesis** (`Example/`) - Predict reactants from product molecules
 2. **Molecule Generation** (`MolGen/`) - Generate novel molecules
 3. **Material Generation** (`MatGen/`) - Generate crystal structures
 4. **ML Interatomic Potentials** (`MLIP/`) - Predict atomic forces and energies
@@ -412,21 +412,21 @@ results = run(num_samples=100)
 
 ```bash
 # Run benchmark for a single model
-./Retro/benchmarks/run.sh --model <ModelName> --limit 1000 --track_carbon
+./Example/benchmarks/run.sh --model <ModelName> --limit 1000 --track_carbon
 
 # Run all models for a task
-./Retro/benchmarks/run.sh --model all --limit 1000 --track_carbon
+./Example/benchmarks/run.sh --model all --limit 1000 --track_carbon
 
 # Setup all environments
-./Retro/benchmarks/setup_envs.sh
+./Example/benchmarks/setup_envs.sh
 
 # Setup a specific model's environment
-./Retro/benchmarks/setup_envs.sh <ModelName>
+./Example/benchmarks/setup_envs.sh <ModelName>
 ```
 
 ## Carbon Measurement
 
-Use the unified `CarbonTracker` wrapper in `Retro/benchmarks/carbon_tracker.py`:
+Use the unified `CarbonTracker` wrapper in `Example/benchmarks/carbon_tracker.py`:
 
 ```python
 from Retro.benchmarks.carbon_tracker import CarbonTracker
