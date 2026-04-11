@@ -87,7 +87,7 @@ All tasks benchmarked on the same hardware with full carbon tracking.
 | 2019 | ACS Cent. Sci. | MolecularTransformer | LM | 11.7M | 86.8% | 91.7% | 360.0 | 4.50 | 12,317 | 154 |
 | 2021 | JCIM | MEGAN | GNN | 9.9M | 80.1% | 86.4% | 85.3 | 1.07 | 6,657 | 83 |
 | 2021 | JCIM | Graph2SMILES | LM | 18M | 88.5% | 89.9% | 287.8 | 3.60 | 7,940 | 99 |
-| 2022 | Nat. Mach. Intell. | LocalTransform | GNN | 9.1M | 87.4% | 92.1% | 282.9 | 3.54 | 17,799 | 222 |
+| 2022 | Nat. Mach. Intell. | LocalTransform | GNN | 9.1M | 90.4% | 94.1% | 282.9 | 3.54 | 17,799 | 222 |
 | 2022 | ML:ST | Chemformer | LM | 44.7M | 89.0% | 89.8% | 580.0 | 7.25 | 45,288 | 566 |
 | 2022 | Chem. Sci. | **RSMILES** | LM | 44.6M | **89.4%** | **94.7%** | 614.7 | 7.68 | 46,209 | 578 |
 | 2024 | COLM | LlaSMol | LLM | ~7.2B | 3.8% | 5.9% | 1,413.8 | 17.67 | 104,960 | 1,312 |

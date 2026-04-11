@@ -1082,7 +1082,7 @@ function renderRefChart() {
       type:           'log',
       range:          [Math.log10(0.5), Math.log10(8e8)],
       dtick:          1,
-      exponentformat: 'SI',
+      exponentformat: 'power',
       showgrid:       true, gridcolor: '#f1f5f9', zeroline: false,
       tickfont:       { family: 'JetBrains Mono, monospace', size: 11 },
       automargin:     true,
@@ -1095,7 +1095,7 @@ function renderRefChart() {
       title: { text: 'Category', font: { size: 11 } },
     },
     annotations: sorted.map(d => ({
-      x:        d._barVal,
+      x:        Math.log10(d._barVal),
       y:        d.label,
       xref:     'x',
       yref:     'y',
@@ -1198,7 +1198,7 @@ function renderScatterChart(task) {
       title:          { text: 'CO₂/job (g)', font: { size: 12 } },
       type:           'log',
       dtick:          1,
-      exponentformat: 'SI',
+      exponentformat: 'power',
       showgrid:       true, gridcolor: '#f1f5f9', zeroline: false,
       tickfont:       { family: 'JetBrains Mono, monospace', size: 11 },
       automargin:     true,
@@ -1218,7 +1218,7 @@ function renderScatterChart(task) {
     annotations: taskRows
       .filter(r => GLOBAL_PARETO.has(r))
       .map(r => ({
-        x:         r.CO2_per_job,
+        x:         Math.log10(r.CO2_per_job),
         y:         r.major_metric,
         xref:      'x',
         yref:      'y',

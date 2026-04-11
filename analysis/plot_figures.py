@@ -515,7 +515,7 @@ ALT_METRICS = {
     'Retro':   {'neuralsym': 72.8, 'MEGAN': 87.0, 'LocalRetro': 91.5, 'RSMILES': 89.6,
                 'Chemformer': 62.8, 'LlaSMol': 5.0, 'RetroBridge': 44.9, 'RSGPT': 96.6},
     'Forward': {'neuralsym': 49.5, 'MEGAN': 80.1, 'Graph2SMILES': 88.5, 'Chemformer': 89.0,
-                'LocalTransform': 89.4, 'MolecularTransformer': 86.8, 'RSMILES': 89.4, 'LlaSMol': 3.8},
+                'LocalTransform': 90.4, 'MolecularTransformer': 86.8, 'RSMILES': 89.4, 'LlaSMol': 3.8},
 }
 # MolGen VUNS is already in the pretrained data loaded in load_data()
 MOLGEN_VUNS = {
