@@ -48,59 +48,56 @@
 
     /* ─── HEADER ─────────────────────────────────────────── */
     header {
-      background: linear-gradient(135deg, var(--header-from) 0%, var(--header-to) 100%);
-      color: #fff;
+      background: var(--card);
+      color: var(--text);
       padding: 36px 24px 28px;
+      border-bottom: 1px solid var(--border);
       position: relative;
-      overflow: hidden;
     }
-    header::before {
-      content: '';
-      position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
-      pointer-events: none;
+    .header-inner {
+      max-width: 1280px; margin: 0 auto; position: relative;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
     }
-    .header-inner { max-width: 1280px; margin: 0 auto; position: relative; }
     .header-top {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px; width: 100%;
     }
-    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo { display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .logo-icon {
       width: 80px; height: 80px;
-      background: rgba(255,255,255,.15); border-radius: 14px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 24px; flex-shrink: 0;
+      flex-shrink: 0;
     }
-    .logo-text h1 { font-size: 24px; font-weight: 700; letter-spacing: -.3px; }
-    .logo-text p  { font-size: 13px; opacity: .75; margin-top: 2px; }
+    .logo-text h1 { font-size: 28px; font-weight: 700; letter-spacing: -.4px; color: var(--text); }
+    .logo-text p  { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
 
-    .header-badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .header-badges { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
     .header-badge {
-      background: rgba(255,255,255,.15);
-      border: 1px solid rgba(255,255,255,.25);
-      color: #fff; padding: 4px 12px; border-radius: 999px;
+      background: var(--accent-light);
+      border: 1px solid #a7f3d0;
+      color: #065f46; padding: 4px 12px; border-radius: 999px;
       font-size: 12px; font-weight: 500;
     }
 
     .header-desc {
-      margin-top: 14px; font-size: 13.5px; opacity: .82;
-      max-width: 700px; line-height: 1.65;
+      margin-top: 14px; font-size: 13.5px; color: var(--text-muted);
+      max-width: 680px; line-height: 1.65;
     }
 
     /* Stats bar inside header */
     .stats-bar {
-      display: flex; gap: 32px; flex-wrap: wrap;
+      display: flex; gap: 40px; flex-wrap: wrap; justify-content: center;
       margin-top: 22px; padding-top: 18px;
-      border-top: 1px solid rgba(255,255,255,.15);
+      border-top: 1px solid var(--border);
+      width: 100%;
     }
-    .stat-item { display: flex; flex-direction: column; gap: 3px; }
+    .stat-item { display: flex; flex-direction: column; gap: 3px; align-items: center; }
     .stat-value {
       font-size: 22px; font-weight: 700;
-      font-family: var(--mono); letter-spacing: -.5px;
+      font-family: var(--mono); letter-spacing: -.5px; color: var(--accent-dark);
     }
     .stat-label {
-      font-size: 11px; opacity: .65;
+      font-size: 11px; color: var(--text-muted);
       text-transform: uppercase; letter-spacing: .07em;
     }
     .stat-icon {
@@ -388,6 +385,7 @@
         <span class="header-badge">Open Benchmark</span>
       </div>
     </div>
+
     <p class="header-desc">
       Benchmarking predictive performance <em>and</em> carbon cost of AI for scientific
       discovery — retrosynthesis, forward prediction, molecule generation, material generation,
