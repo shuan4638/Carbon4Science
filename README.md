@@ -5,9 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://shuan4638.github.io/Carbon4Science/">
-    <img src="https://img.shields.io/badge/🌐%20Live%20Leaderboard-carbon4science.github.io-059669?style=for-the-badge" alt="Live Leaderboard" />
-  </a>
+  <a href="https://shuan4638.github.io/Carbon4Science/"><b>🌐 shuan4638.github.io/Carbon4Science</b></a><br/>
+  <em>Interactive leaderboard — explore accuracy vs. carbon cost across all tasks</em>
 </p>
 
 <p align="center">
