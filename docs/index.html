@@ -428,11 +428,11 @@
     <div class="controls-right" id="row-count-label"></div>
   </div>
 
-  <!-- CO₂ Reference Points chart -->
+  <!-- Main chart (switches between reference points and Pareto scatter) -->
   <div class="chart-card">
     <div class="chart-header">
-      <span class="chart-title">CO₂ Emission Reference Points</span>
-      <span class="chart-hint">Log scale · Hover for details</span>
+      <span class="chart-title" id="chart-title">CO₂ Emission Reference Points</span>
+      <span class="chart-hint" id="chart-hint">Log scale · Hover for details</span>
     </div>
     <div id="ref-chart"></div>
   </div>
@@ -914,21 +914,22 @@ function buildStepLine(front) {
 /* ──────────────────────────────────────────────────────
    CO₂ REFERENCE POINTS DATA
 ────────────────────────────────────────────────────── */
+// taskKey links AI entries to ALL_DATA tasks so we can compute min/max for error bars
 const REF_DATA = [
-  { category: 'LLM inference',           label: 'Image generation',        desc: 'Stable Diffusion',              value: 1.38,    unit: 'image' },
-  { category: 'LLM inference',           label: 'Text generation',          desc: 'Claude-3.7 Sonnet',             value: 2.12,    unit: '10k in & 1.5k out' },
-  { category: 'Everyday activities',     label: 'Smartphone charge',        desc: 'iPhone 16 Pro Max',             value: 9.7,     unit: 'full charge' },
-  { category: 'Chemical simulation',     label: 'Classical MD',             desc: 'force field',                   value: 10,      unit: '1M steps' },
-  { category: 'AI Synthesis prediction', label: 'Reaction outcome pred.',   desc: 'LlaSMol',                       value: 17.7,    unit: '500 inputs' },
-  { category: 'Everyday activities',     label: 'Driving a car',            desc: 'EU average',                    value: 170,     unit: 'km' },
-  { category: 'AI Chemical generation',  label: 'Molecule generation',      desc: 'DeFoG',                         value: 355.2,   unit: '10K molecules' },
-  { category: 'AI Synthesis prediction', label: 'Synthesis Planning',       desc: 'RetroBridge',                   value: 403,     unit: '500 molecules' },
-  { category: 'AI Chemical generation',  label: 'Material generation',      desc: 'MatterGen',                     value: 248,     unit: '1K structures' },
-  { category: 'AI MD simulation',        label: 'MLIP simulation',          desc: 'eSEN',                          value: 3486,    unit: '1M steps' },
-  { category: 'Chemical synthesis',      label: 'Battery synthesis',        desc: 'Vanadium flow battery',         value: 37000,   unit: 'MWh' },
-  { category: 'Chemical synthesis',      label: 'Material synthesis',       desc: 'UiO-66-NH₂ (aqueous-based)',    value: 43000,   unit: 'kg' },
-  { category: 'Chemical simulation',     label: 'Ab initio MD',             desc: 'PBE (50 atoms)',                value: 140960,  unit: '1M steps' },
-  { category: 'Chemical synthesis',      label: 'Organic synthesis',        desc: 'Letermovir (Merck)',             value: 382000,  unit: 'kg' },
+  { category: 'LLM inference',           label: 'Image generation',        desc: 'Stable Diffusion',              value: 1.38,    unit: 'image',             taskKey: null },
+  { category: 'LLM inference',           label: 'Text generation',          desc: 'Claude-3.7 Sonnet',             value: 2.12,    unit: '10k in & 1.5k out', taskKey: null },
+  { category: 'Everyday activities',     label: 'Smartphone charge',        desc: 'iPhone 16 Pro Max',             value: 9.7,     unit: 'full charge',        taskKey: null },
+  { category: 'Chemical simulation',     label: 'Classical MD',             desc: 'force field',                   value: 10,      unit: '1M steps',           taskKey: null },
+  { category: 'AI Synthesis prediction', label: 'Reaction outcome pred.',   desc: 'LlaSMol (best: neuralsym)',     value: 17.67,   unit: '500 inputs',         taskKey: 'Forward' },
+  { category: 'Everyday activities',     label: 'Driving a car',            desc: 'EU average',                    value: 170,     unit: 'km',                 taskKey: null },
+  { category: 'AI Chemical generation',  label: 'Material generation',      desc: 'eSEN (best: CrystalFlow)',      value: 248.1,   unit: '1K structures',      taskKey: 'MatGen' },
+  { category: 'AI Chemical generation',  label: 'Molecule generation',      desc: 'DeFoG (best: REINVENT4)',       value: 355.24,  unit: '10K molecules',      taskKey: 'MolGen' },
+  { category: 'AI Synthesis prediction', label: 'Synthesis Planning',       desc: 'RetroBridge (best: neuralsym)', value: 403.45,  unit: '500 molecules',      taskKey: 'Retro' },
+  { category: 'AI MD simulation',        label: 'MLIP simulation',          desc: 'eSEN (best: ORB)',              value: 3486,    unit: '1M steps',           taskKey: 'StructOpt' },
+  { category: 'Chemical synthesis',      label: 'Battery synthesis',        desc: 'Vanadium flow battery',         value: 37000,   unit: 'MWh',                taskKey: null },
+  { category: 'Chemical synthesis',      label: 'Material synthesis',       desc: 'UiO-66-NH₂ (aqueous-based)',    value: 43000,   unit: 'kg',                 taskKey: null },
+  { category: 'Chemical simulation',     label: 'Ab initio MD',             desc: 'PBE (50 atoms)',                value: 140960,  unit: '1M steps',           taskKey: null },
+  { category: 'Chemical synthesis',      label: 'Organic synthesis',        desc: 'Letermovir (Merck)',             value: 382000,  unit: 'kg',                 taskKey: null },
 ].sort((a, b) => a.value - b.value);
 
 const REF_CAT_COLORS = {
@@ -942,46 +943,88 @@ const REF_CAT_COLORS = {
 };
 
 /* ──────────────────────────────────────────────────────
-   RENDER CHART (CO₂ Reference Points)
+   RENDER CHART — switches based on active tab
 ────────────────────────────────────────────────────── */
 function renderChart() {
+  if (state.activeTask !== 'All') {
+    renderScatterChart(state.activeTask);
+  } else {
+    renderRefChart();
+  }
+}
+
+/* ── CO₂ Reference Points (All tab) ── */
+function renderRefChart() {
+  document.getElementById('chart-title').textContent = 'CO₂ Emission Reference Points';
+  document.getElementById('chart-hint').textContent  = 'Log scale · Error bars show range across all models · Hover for details';
+
+  // Pre-compute min/max CO2_per_job per task for error bars
+  const taskRanges = {};
+  Object.keys(TASK_CONFIG).forEach(t => {
+    const vals = ALL_DATA.filter(r => r.task === t).map(r => r.CO2_per_job);
+    if (vals.length) taskRanges[t] = { min: Math.min(...vals), max: Math.max(...vals) };
+  });
+  // MDSim shares models with StructOpt — merge their ranges
+  if (taskRanges['MDSim'] && taskRanges['StructOpt']) {
+    const merged = {
+      min: Math.min(taskRanges['MDSim'].min, taskRanges['StructOpt'].min),
+      max: Math.max(taskRanges['MDSim'].max, taskRanges['StructOpt'].max),
+    };
+    taskRanges['MDSim'] = taskRanges['StructOpt'] = merged;
+  }
+
   const sorted = REF_DATA;
 
-  const labels    = sorted.map(d => d.label);
-  const values    = sorted.map(d => d.value);
-  const colors    = sorted.map(d => REF_CAT_COLORS[d.category] || '#64748b');
-  const customs   = sorted.map(d => ({
-    desc: d.desc,
-    unit: d.unit,
-    cat:  d.category,
-    valFmt: d.value >= 1000
+  const errPlus  = sorted.map(d => d.taskKey && taskRanges[d.taskKey]
+    ? Math.max(0, taskRanges[d.taskKey].max - d.value) : 0);
+  const errMinus = sorted.map(d => d.taskKey && taskRanges[d.taskKey]
+    ? Math.max(0, d.value - taskRanges[d.taskKey].min) : 0);
+
+  const customs = sorted.map((d, i) => {
+    const rng = d.taskKey && taskRanges[d.taskKey];
+    const center = d.value >= 1000
       ? `${(d.value / 1000).toFixed(1)} kg CO₂ eq`
-      : `${d.value} g CO₂ eq`,
-  }));
+      : `${d.value} g CO₂ eq`;
+    const range = rng
+      ? `Range: ${rng.min < 1000 ? rng.min.toFixed(2) + ' g' : (rng.min / 1000).toFixed(1) + ' kg'
+        } – ${rng.max < 1000 ? rng.max.toFixed(2) + ' g' : (rng.max / 1000).toFixed(1) + ' kg'}`
+      : '';
+    return { desc: d.desc, unit: d.unit, cat: d.category, center, range };
+  });
 
   const traces = [{
     type: 'bar',
     orientation: 'h',
-    x: values,
-    y: labels,
-    marker: { color: colors },
+    x: sorted.map(d => d.value),
+    y: sorted.map(d => d.label),
+    marker: { color: sorted.map(d => REF_CAT_COLORS[d.category] || '#64748b') },
+    error_x: {
+      type:      'data',
+      symmetric: false,
+      array:     errPlus,
+      arrayminus: errMinus,
+      color:     '#475569',
+      thickness: 2,
+      width:     6,
+    },
     customdata: customs,
     hovertemplate:
       '<b>%{y}</b><br>' +
       '%{customdata.desc}<br>' +
-      '<b>%{customdata.valFmt}</b> / %{customdata.unit}<br>' +
+      '<b>%{customdata.center}</b> / %{customdata.unit}<br>' +
+      '%{customdata.range}<br>' +
       '<i>%{customdata.cat}</i>' +
       '<extra></extra>',
+    showlegend: false,
   }];
 
-  // Build category legend traces (invisible, for legend only)
+  // Category legend traces (invisible bars, for legend only)
   const seenCats = new Set();
   sorted.forEach(d => {
     if (!seenCats.has(d.category)) {
       seenCats.add(d.category);
       traces.push({
-        type: 'bar',
-        orientation: 'h',
+        type: 'bar', orientation: 'h',
         x: [null], y: [null],
         name: d.category,
         marker: { color: REF_CAT_COLORS[d.category] || '#64748b' },
@@ -996,28 +1039,19 @@ function renderChart() {
       title:      { text: 'CO₂ Emission (g)', font: { size: 12 } },
       type:       'log',
       range:      [Math.log10(0.5), Math.log10(8e8)],
-      showgrid:   true,
-      gridcolor:  '#f1f5f9',
-      zeroline:   false,
+      showgrid:   true, gridcolor: '#f1f5f9', zeroline: false,
       tickfont:   { family: 'JetBrains Mono, monospace', size: 11 },
       automargin: true,
     },
-    yaxis: {
-      automargin: true,
-      tickfont:   { size: 12 },
-    },
+    yaxis: { automargin: true, tickfont: { size: 12 } },
     legend: {
-      orientation: 'v',
-      x: 1.01, y: 1,
-      font: { size: 11 },
-      bgcolor: 'rgba(255,255,255,.88)',
-      bordercolor: '#e2e8f0',
-      borderwidth: 1,
+      orientation: 'v', x: 1.01, y: 1,
+      font: { size: 11 }, bgcolor: 'rgba(255,255,255,.88)',
+      bordercolor: '#e2e8f0', borderwidth: 1,
       title: { text: 'Category', font: { size: 11 } },
     },
     margin:        { t: 12, b: 50, l: 10, r: 220 },
-    plot_bgcolor:  '#ffffff',
-    paper_bgcolor: '#ffffff',
+    plot_bgcolor:  '#ffffff', paper_bgcolor: '#ffffff',
     hovermode:     'closest',
     hoverlabel:    { font: { family: 'Inter, sans-serif', size: 12 }, align: 'left' },
     font:          { family: 'Inter, system-ui, sans-serif' },
@@ -1029,6 +1063,112 @@ function renderChart() {
     modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],
     responsive: true,
     toImageButtonOptions: { format: 'png', filename: 'co2_reference_points', scale: 2 },
+  };
+
+  Plotly.react('ref-chart', traces, layout, config);
+}
+
+/* ── Pareto scatter (task-specific tabs) ── */
+function renderScatterChart(task) {
+  const cfg      = TASK_CONFIG[task];
+  const taskRows = ALL_DATA.filter(r => r.task === task);
+
+  document.getElementById('chart-title').textContent = `${task}: Accuracy vs. Carbon Cost`;
+  document.getElementById('chart-hint').textContent  =
+    'X-axis: CO₂/job (log) · Pareto frontier shown as dashed line · Hover for details';
+
+  const traces = [];
+
+  // Group by architecture
+  const byArch = {};
+  taskRows.forEach(r => { (byArch[r.modelType] = byArch[r.modelType] || []).push(r); });
+
+  Object.entries(byArch).forEach(([arch, rows]) => {
+    traces.push({
+      type: 'scatter', mode: 'markers',
+      name: arch,
+      x: rows.map(r => r.CO2_per_job),
+      y: rows.map(r => r.major_metric),
+      marker: {
+        symbol:  ARCH_SYMBOLS[arch] || 'circle',
+        size:    rows.map(r => GLOBAL_PARETO.has(r) ? 14 : 9),
+        color:   rows.map(r => GLOBAL_PARETO.has(r) ? cfg.color : hexToRgba(cfg.color, 0.55)),
+        line: {
+          color: rows.map(r => GLOBAL_PARETO.has(r) ? darkenHex(cfg.color, 40) : cfg.color),
+          width: rows.map(r => GLOBAL_PARETO.has(r) ? 2 : 1),
+        },
+      },
+      customdata: rows.map(r => ({
+        model:   r.model,
+        arch:    r.modelType,
+        size:    r.modelSize,
+        metric:  fmtMetric(r.major_metric, r.task),
+        mlabel:  cfg.majorLabel,
+        co2:     r.CO2_per_job,
+        time:    fmtTime(r.inference_time_per_exp),
+        pareto:  GLOBAL_PARETO.has(r),
+        year:    r.year,
+        venue:   r.venue,
+      })),
+      hovertemplate: [
+        '<b>%{customdata.model}</b> <i>(%{customdata.year})</i>',
+        '%{customdata.arch} · %{customdata.size} · %{customdata.venue}',
+        '%{customdata.mlabel}: <b>%{customdata.metric}</b>',
+        'CO₂/job: <b>%{x:.2f} g</b>',
+        'Time/exp: %{customdata.time}',
+        '<extra>%{customdata.pareto ? "⚡ Pareto-optimal" : ""}</extra>',
+      ].join('<br>'),
+      showlegend: true,
+    });
+  });
+
+  // Pareto step-line
+  const frontPts = taskRows
+    .filter(r => GLOBAL_PARETO.has(r))
+    .map(r => ({ x: r.CO2_per_job, y: r.major_metric }));
+  if (frontPts.length >= 2) {
+    const { lx, ly } = buildStepLine(paretoFrontier(frontPts));
+    traces.push({
+      type: 'scatter', mode: 'lines',
+      name: 'Pareto frontier',
+      x: lx, y: ly,
+      line: { color: cfg.color, dash: 'dash', width: 1.5 },
+      hoverinfo: 'skip', showlegend: false,
+    });
+  }
+
+  const layout = {
+    xaxis: {
+      title:      { text: 'CO₂/job (g)', font: { size: 12 } },
+      type:       'log',
+      showgrid:   true, gridcolor: '#f1f5f9', zeroline: false,
+      tickfont:   { family: 'JetBrains Mono, monospace', size: 11 },
+      automargin: true,
+    },
+    yaxis: {
+      title:      { text: cfg.majorLabel, font: { size: 12 } },
+      showgrid:   true, gridcolor: '#f1f5f9', zeroline: false,
+      tickfont:   { family: 'JetBrains Mono, monospace', size: 11 },
+      automargin: true,
+    },
+    legend: {
+      orientation: 'v', x: 1.01, y: 1,
+      font: { size: 11 }, bgcolor: 'rgba(255,255,255,.88)',
+      bordercolor: '#e2e8f0', borderwidth: 1,
+      title: { text: 'Architecture', font: { size: 11 } },
+    },
+    margin:        { t: 18, b: 50, l: 60, r: 180 },
+    plot_bgcolor:  '#ffffff', paper_bgcolor: '#ffffff',
+    hovermode:     'closest',
+    hoverlabel:    { font: { family: 'Inter, sans-serif', size: 12 }, align: 'left' },
+    font:          { family: 'Inter, system-ui, sans-serif' },
+  };
+
+  const config = {
+    displayModeBar: true,
+    modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],
+    responsive: true,
+    toImageButtonOptions: { format: 'png', filename: `pareto_${task}`, scale: 2 },
   };
 
   Plotly.react('ref-chart', traces, layout, config);
