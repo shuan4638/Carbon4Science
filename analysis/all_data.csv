@@ -1,7 +1,7 @@
 task,year,venue,model,model type,model size,major_metric,minor_metric,inference_time_per_exp,CO2_per_exp,CO2_per_job,baseline?
 Retro,2017,Chem. Eur. J.,neuralsym,MLP,32.5M,74.8,72.8,1282,35.0,3.50,TRUE
 Retro,2021,JCIM,MEGAN,GNN,9.8M,90.1,87.0,2951,51.7,5.15,FALSE
-Retro,2021,JACS Au,LocalRetro,GNN,8.6M,97.3,90.4,2313,62.1,6.20,FALSE
+Retro,2021,JACS Au,LocalRetro,GNN,8.6M,97.3,91.5,2313,62.1,6.20,FALSE
 Retro,2022,Chem. Sci.,RSMILES,LM,44.6M,93.0,89.6,44142,1083,108.25,FALSE
 Retro,2022,ML:ST,Chemformer,LM,44.7M,64.0,62.8,85055,2570,256.65,FALSE
 Retro,2024,COLM,LlaSMol,LLM,7.2B,5.0,5.0,39119,1385,138.35,FALSE

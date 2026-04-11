@@ -512,7 +512,7 @@ def plot_fig5(df):
 ALT_METRICS = {
     'MatGen':  {'CDVAE': 3.2, 'DiffCSP': 4.3, 'CrystaLLM': 3.5, 'FlowMM': 4.3,
                 'ChargeDIFF': 4.4, 'MatterGen': 5.2, 'ADiT': 5.5, 'CrystalFlow': 3.0},
-    'Retro':   {'neuralsym': 72.8, 'MEGAN': 87.0, 'LocalRetro': 90.4, 'RSMILES': 89.6,
+    'Retro':   {'neuralsym': 72.8, 'MEGAN': 87.0, 'LocalRetro': 91.5, 'RSMILES': 89.6,
                 'Chemformer': 62.8, 'LlaSMol': 5.0, 'RetroBridge': 44.9, 'RSGPT': 96.6},
     'Forward': {'neuralsym': 49.5, 'MEGAN': 80.1, 'Graph2SMILES': 88.5, 'Chemformer': 89.0,
                 'LocalTransform': 89.4, 'MolecularTransformer': 86.8, 'RSMILES': 89.4, 'LlaSMol': 3.8},

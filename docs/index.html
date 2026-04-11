@@ -1,217 +1,1129 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Carbon Cost of Generative AI for Science</title>
-    <meta name="description" content="A benchmarking framework for evaluating the carbon efficiency of generative AI models in scientific discovery.">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --color-primary: #059669;
-            --color-primary-dark: #047857;
-            --color-bg: #fafafa;
-            --color-surface: #ffffff;
-            --color-text: #1f2937;
-            --color-text-secondary: #6b7280;
-            --color-border: #e5e7eb;
-            --max-width: 900px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--color-bg);
-            color: var(--color-text);
-            line-height: 1.7;
-        }
-        header {
-            background: linear-gradient(135deg, #064e3b 0%, #047857 100%);
-            color: white;
-            padding: 4rem 2rem;
-            text-align: center;
-        }
-        header h1 { font-size: 2.25rem; font-weight: 700; margin-bottom: 1rem; }
-        header p { font-size: 1.15rem; opacity: 0.9; max-width: 600px; margin: 0 auto 2rem; }
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            background: rgba(255,255,255,0.15);
-            border-radius: 2rem;
-            font-size: 0.9rem;
-            text-decoration: none;
-            color: white;
-            margin: 0.25rem;
-            transition: background 0.2s;
-        }
-        .badge:hover { background: rgba(255,255,255,0.25); }
-        main { max-width: var(--max-width); margin: 0 auto; padding: 3rem 2rem; }
-        section { margin-bottom: 3rem; }
-        h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--color-primary-dark); }
-        p { margin-bottom: 1rem; }
-        .key-finding {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            border-left: 4px solid var(--color-primary);
-            padding: 1.25rem;
-            border-radius: 0.5rem;
-            margin: 1.5rem 0;
-        }
-        .key-finding strong { color: var(--color-primary-dark); }
-        .tasks {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-        .task-card {
-            background: var(--color-surface);
-            border: 1px solid var(--color-border);
-            border-radius: 0.75rem;
-            padding: 1.25rem;
-        }
-        .task-card h3 { font-size: 1.1rem; margin-bottom: 0.5rem; }
-        .status {
-            font-size: 0.75rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 1rem;
-            display: inline-block;
-            margin-left: 0.5rem;
-        }
-        .status.active { background: #d1fae5; color: #065f46; }
-        .status.planned { background: #fef3c7; color: #92400e; }
-        pre {
-            background: #1f2937;
-            color: #e5e7eb;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-        }
-        code {
-            font-family: 'JetBrains Mono', monospace;
-            background: #f3f4f6;
-            padding: 0.15rem 0.3rem;
-            border-radius: 0.25rem;
-            font-size: 0.85em;
-        }
-        pre code { background: none; padding: 0; }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 500;
-            text-decoration: none;
-            background: var(--color-primary);
-            color: white;
-            transition: background 0.2s;
-        }
-        .btn:hover { background: var(--color-primary-dark); }
-        footer {
-            background: #1f2937;
-            color: #9ca3af;
-            padding: 2rem;
-            text-align: center;
-        }
-        footer a { color: #d1d5db; }
-        @media (max-width: 768px) {
-            header h1 { font-size: 1.75rem; }
-            main { padding: 2rem 1rem; }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Carbon Cost of AI for Science</title>
+  <meta name="description" content="Benchmarking accuracy and carbon efficiency of AI models for scientific discovery." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <script src="data.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #f8fafc;
+      --card:         #ffffff;
+      --border:       #e2e8f0;
+      --border-light: #f1f5f9;
+      --text:         #0f172a;
+      --text-muted:   #64748b;
+      --text-light:   #94a3b8;
+      --accent:       #059669;
+      --accent-dark:  #047857;
+      --accent-light: #d1fae5;
+      --header-from:  #064e3b;
+      --header-to:    #047857;
+      --radius:       10px;
+      --radius-sm:    6px;
+      --shadow:       0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+      --shadow-md:    0 4px 12px rgba(0,0,0,.10), 0 2px 4px rgba(0,0,0,.06);
+      --font:         'Inter', system-ui, sans-serif;
+      --mono:         'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+
+    /* ─── HEADER ─────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, var(--header-from) 0%, var(--header-to) 100%);
+      color: #fff;
+      padding: 36px 24px 28px;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+      pointer-events: none;
+    }
+    .header-inner { max-width: 1280px; margin: 0 auto; position: relative; }
+    .header-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    }
+    .logo { display: flex; align-items: center; gap: 12px; }
+    .logo-icon {
+      width: 46px; height: 46px;
+      background: rgba(255,255,255,.15); border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .logo-text h1 { font-size: 24px; font-weight: 700; letter-spacing: -.3px; }
+    .logo-text p  { font-size: 13px; opacity: .75; margin-top: 2px; }
+
+    .header-badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .header-badge {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      color: #fff; padding: 4px 12px; border-radius: 999px;
+      font-size: 12px; font-weight: 500;
+    }
+
+    .header-desc {
+      margin-top: 14px; font-size: 13.5px; opacity: .82;
+      max-width: 700px; line-height: 1.65;
+    }
+
+    /* Stats bar inside header */
+    .stats-bar {
+      display: flex; gap: 32px; flex-wrap: wrap;
+      margin-top: 22px; padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,.15);
+    }
+    .stat-item { display: flex; flex-direction: column; gap: 3px; }
+    .stat-value {
+      font-size: 22px; font-weight: 700;
+      font-family: var(--mono); letter-spacing: -.5px;
+    }
+    .stat-label {
+      font-size: 11px; opacity: .65;
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+
+    /* ─── MAIN LAYOUT ────────────────────────────────────── */
+    main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 56px; }
+
+    /* ─── TASK TABS ──────────────────────────────────────── */
+    .tabs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 18px; }
+    .tabs {
+      display: flex; gap: 2px;
+      border-bottom: 2px solid var(--border);
+      min-width: max-content;
+    }
+    .tab-btn {
+      padding: 9px 17px; border: none; background: none;
+      font-family: var(--font); font-size: 13.5px; font-weight: 500;
+      color: var(--text-muted); cursor: pointer;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      transition: color .15s, background .15s;
+      position: relative; white-space: nowrap;
+    }
+    .tab-btn:hover { color: var(--text); background: var(--border-light); }
+    .tab-btn.active { color: var(--text); font-weight: 600; }
+    .tab-btn.active::after {
+      content: ''; position: absolute;
+      bottom: -2px; left: 0; right: 0;
+      height: 2.5px;
+      background: var(--tab-color, var(--accent));
+      border-radius: 2px 2px 0 0;
+    }
+    .tab-dot {
+      display: inline-block; width: 7px; height: 7px;
+      border-radius: 50%; margin-right: 6px; vertical-align: middle;
+    }
+    .tab-count {
+      display: inline-block; background: var(--border-light);
+      color: var(--text-muted); font-size: 11px;
+      padding: 1px 6px; border-radius: 999px;
+      margin-left: 5px; font-weight: 400;
+    }
+    .tab-btn.active .tab-count { background: var(--accent-light); color: #065f46; }
+
+    /* ─── TASK BANNER ────────────────────────────────────── */
+    .task-banner {
+      display: none; align-items: center; gap: 10px;
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--radius); padding: 10px 16px; margin-bottom: 16px;
+      font-size: 13px;
+    }
+    .task-banner.visible { display: flex; }
+    .task-banner-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .task-banner-label { font-weight: 700; font-size: 14px; }
+    .task-banner-sep { color: var(--text-light); }
+    .task-banner-desc { color: var(--text-muted); }
+
+    /* ─── CONTROLS ───────────────────────────────────────── */
+    .controls {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      align-items: center; margin-bottom: 18px;
+    }
+    .search-wrap {
+      position: relative; flex: 1; min-width: 180px; max-width: 300px;
+    }
+    .search-icon {
+      position: absolute; left: 10px; top: 50%;
+      transform: translateY(-50%); color: var(--text-light); pointer-events: none;
+    }
+    .search-input {
+      width: 100%; padding: 8px 12px 8px 34px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: var(--font); font-size: 13.5px;
+      background: var(--card); color: var(--text);
+      transition: border-color .15s, box-shadow .15s; outline: none;
+    }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(5,150,105,.12);
+    }
+    .search-input::placeholder { color: var(--text-light); }
+
+    select.filter-select {
+      padding: 8px 32px 8px 12px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      font-family: var(--font); font-size: 13.5px;
+      background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E") no-repeat right 10px center;
+      color: var(--text); cursor: pointer; outline: none; appearance: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    select.filter-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(5,150,105,.12);
+    }
+
+    .controls-right {
+      margin-left: auto; color: var(--text-muted);
+      font-size: 12.5px; white-space: nowrap;
+    }
+
+    /* ─── CHART CARD ─────────────────────────────────────── */
+    .chart-card {
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      margin-bottom: 20px; overflow: hidden;
+    }
+    .chart-header {
+      padding: 13px 20px; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .chart-title { font-size: 14px; font-weight: 600; }
+    .chart-hint { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+    #scatter-chart { width: 100%; height: 480px; }
+
+    .arch-legend {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      padding: 12px 20px; border-top: 1px solid var(--border-light);
+      background: #fafafa;
+    }
+    .arch-legend-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 12px; color: var(--text-muted);
+    }
+    .arch-legend-sym { font-size: 13px; line-height: 1; }
+
+    /* ─── TABLE CARD ─────────────────────────────────────── */
+    .table-card {
+      background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden;
+    }
+    .table-card-header {
+      padding: 13px 20px; border-bottom: 1px solid var(--border-light);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .table-card-title { font-size: 14px; font-weight: 600; }
+    .table-card-sub { font-size: 12px; color: var(--text-muted); margin-left: auto; }
+
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+
+    thead {
+      position: sticky; top: 0; z-index: 10; background: #f8fafc;
+    }
+    thead tr { border-bottom: 2px solid var(--border); }
+    th {
+      padding: 10px 14px; text-align: left;
+      font-size: 11.5px; font-weight: 600; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .05em;
+      white-space: nowrap; user-select: none; cursor: pointer;
+      transition: color .15s, background .15s;
+    }
+    th:hover { color: var(--text); background: var(--border-light); }
+    th.sorted { color: var(--accent); }
+    th .sort-icon { margin-left: 3px; opacity: .45; font-style: normal; font-size: 10px; }
+    th.sorted .sort-icon { opacity: 1; }
+    th.no-sort { cursor: default; }
+    th.no-sort:hover { color: var(--text-muted); background: none; }
+
+    .num { text-align: right; font-family: var(--mono); }
+
+    tbody tr { border-bottom: 1px solid var(--border-light); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #f8fafc; }
+    tbody tr.pareto-row { background: #f0fdf4; }
+    tbody tr.pareto-row:hover { background: #dcfce7; }
+
+    td { padding: 10px 14px; vertical-align: middle; }
+    td.rank { font-family: var(--mono); font-size: 12px; color: var(--text-muted); width: 44px; }
+
+    .model-cell { display: flex; align-items: center; gap: 7px; min-width: 130px; }
+    .model-name  { font-weight: 600; font-size: 13.5px; }
+
+    .badge-baseline {
+      background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
+      font-size: 10px; font-weight: 600; padding: 1px 6px;
+      border-radius: 999px; text-transform: uppercase; letter-spacing: .04em;
+      flex-shrink: 0;
+    }
+    .pareto-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: 11px; font-weight: 600; color: #059669;
+      background: #d1fae5; border: 1px solid #6ee7b7;
+      padding: 2px 7px; border-radius: 999px; white-space: nowrap;
+    }
+
+    .arch-pill {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    }
+    .task-pill {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+    }
+
+    /* CO2 bar */
+    .co2-cell { min-width: 110px; }
+    .co2-bar-wrap { display: flex; align-items: center; gap: 7px; }
+    .co2-bar-track {
+      flex: 1; min-width: 40px; height: 5px;
+      background: var(--border-light); border-radius: 999px; overflow: hidden;
+    }
+    .co2-bar-fill {
+      height: 100%; border-radius: 999px;
+      background: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);
+      transition: width .35s ease;
+    }
+    .co2-val {
+      font-family: var(--mono); font-size: 12px;
+      white-space: nowrap; min-width: 50px; text-align: right;
+    }
+
+    /* Venue truncate */
+    td.venue-cell {
+      max-width: 150px; overflow: hidden;
+      text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* Empty state */
+    .empty-state { padding: 52px 24px; text-align: center; color: var(--text-muted); }
+    .empty-icon  { font-size: 42px; margin-bottom: 12px; }
+    .empty-state p { font-size: 14px; }
+
+    /* ─── FOOTER ─────────────────────────────────────────── */
+    footer {
+      text-align: center; padding: 20px 24px;
+      color: var(--text-light); font-size: 12px;
+      border-top: 1px solid var(--border); background: var(--card);
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 720px) {
+      header { padding: 22px 16px 18px; }
+      .logo-text h1 { font-size: 19px; }
+      .stat-value { font-size: 18px; }
+      .stats-bar { gap: 20px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .search-wrap { max-width: 100%; }
+      .controls-right { margin-left: 0; }
+      #scatter-chart { height: 360px; }
+      .chart-hint { display: none; }
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>The Carbon Cost of Generative AI for Science</h1>
-        <p>A benchmarking framework for evaluating the carbon efficiency of generative AI models in scientific discovery</p>
-        <div>
-            <a href="https://github.com/shuan4638/Carbon4Science" class="badge">GitHub</a>
-            <a href="#" class="badge">Paper (Coming Soon)</a>
+
+<!-- ═══════════════════════════ HEADER ══════════════════════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="header-top">
+      <div class="logo">
+        <div class="logo-icon">🌿</div>
+        <div class="logo-text">
+          <h1>Carbon4Science</h1>
+          <p>Accuracy &amp; Carbon Efficiency Leaderboard</p>
         </div>
-    </header>
+      </div>
+      <div class="header-badges">
+        <span class="header-badge" id="hdr-model-count">50 Models</span>
+        <span class="header-badge">6 Tasks</span>
+        <span class="header-badge">Open Benchmark</span>
+      </div>
+    </div>
+    <p class="header-desc">
+      Benchmarking predictive performance <em>and</em> carbon cost of AI for scientific
+      discovery — retrosynthesis, forward prediction, molecule generation, material generation,
+      structure optimization, and MD simulation.
+    </p>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-value" id="stat-models">—</span>
+        <span class="stat-label">Visible models</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-tasks">6</span>
+        <span class="stat-label">Tasks</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-pareto">—</span>
+        <span class="stat-label">Pareto-optimal</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="stat-co2range">—</span>
+        <span class="stat-label">CO₂ range (g)</span>
+      </div>
+    </div>
+  </div>
+</header>
 
-    <main>
-        <section>
-            <h2>Abstract</h2>
-            <p>
-                Artificial intelligence is accelerating scientific discovery, yet current evaluation practices focus
-                almost exclusively on accuracy, neglecting the computational and environmental costs of increasingly
-                complex generative models. This oversight obscures a critical trade-off: <strong>state-of-the-art
-                performance often comes at disproportionate expense</strong>, with order-of-magnitude increases in
-                carbon emissions yielding only marginal improvements.
-            </p>
-            <p>
-                We present <em>The Carbon Cost of Generative AI for Science</em>, a benchmarking framework that
-                systematically evaluates the carbon efficiency of generative models—including diffusion models
-                and large language models—for scientific discovery.
-            </p>
-            <div class="key-finding">
-                <strong>Key Finding:</strong> Simpler, specialized models frequently match or approach state-of-the-art
-                accuracy while consuming <strong>10–100× less compute</strong>.
-            </div>
-        </section>
+<!-- ═══════════════════════════ MAIN ════════════════════════════════ -->
+<main>
 
-        <section>
-            <h2>Tasks</h2>
-            <div class="tasks">
-                <div class="task-card">
-                    <h3>Retro <span class="status active">Complete</span></h3>
-                    <p style="color: var(--color-text-secondary); font-size: 0.9rem;">
-                        Predicting chemical reactants from product molecules
-                    </p>
-                </div>
-                <div class="task-card">
-                    <h3>Molecule Generation <span class="status planned">Planned</span></h3>
-                    <p style="color: var(--color-text-secondary); font-size: 0.9rem;">
-                        Generating novel molecules with desired properties
-                    </p>
-                </div>
-                <div class="task-card">
-                    <h3>Material Generation <span class="status planned">Planned</span></h3>
-                    <p style="color: var(--color-text-secondary); font-size: 0.9rem;">
-                        Generating crystal structures and materials
-                    </p>
-                </div>
-            </div>
-        </section>
+  <!-- Task tabs -->
+  <div class="tabs-wrap">
+    <div class="tabs" id="task-tabs"></div>
+  </div>
 
-        <section>
-            <h2>Carbon Tracking</h2>
-            <pre><code>from benchmarks.carbon_tracker import CarbonTracker
+  <!-- Task info banner -->
+  <div class="task-banner" id="task-banner">
+    <div class="task-banner-dot" id="banner-dot"></div>
+    <span class="task-banner-label" id="banner-label"></span>
+    <span class="task-banner-sep">·</span>
+    <span class="task-banner-desc" id="banner-desc"></span>
+  </div>
 
-tracker = CarbonTracker(project_name="my_experiment")
+  <!-- Controls row -->
+  <div class="controls">
+    <div class="search-wrap">
+      <svg class="search-icon" width="14" height="14" fill="none" stroke="currentColor"
+           stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input class="search-input" id="search-input" type="text"
+             placeholder="Search models…" autocomplete="off" />
+    </div>
+    <select class="filter-select" id="arch-filter">
+      <option value="">All Architectures</option>
+      <option value="MLP">MLP</option>
+      <option value="GNN">GNN</option>
+      <option value="LM">LM</option>
+      <option value="LLM">LLM</option>
+      <option value="VAE">VAE</option>
+      <option value="Diffusion">Diffusion</option>
+      <option value="Flow Matching">Flow Matching</option>
+    </select>
+    <div class="controls-right" id="row-count-label"></div>
+  </div>
 
-with tracker:
-    results = model.predict(test_data)
+  <!-- Scatter chart -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <span class="chart-title">Accuracy vs. Carbon Cost</span>
+      <span class="chart-hint">X-axis: log scale · Pareto frontier shown as dashed line per task · Hover for details</span>
+    </div>
+    <div id="scatter-chart"></div>
+    <div class="arch-legend" id="arch-legend"></div>
+  </div>
 
-metrics = tracker.get_metrics()
-print(f"Energy: {metrics['energy_kwh']:.4f} kWh")
-print(f"CO2: {metrics['emissions_kg_co2']:.4f} kg")</code></pre>
-            <div style="margin-top: 1.5rem;">
-                <a href="https://github.com/shuan4638/Carbon4Science" class="btn">View on GitHub</a>
-            </div>
-        </section>
+  <!-- Leaderboard table -->
+  <div class="table-card">
+    <div class="table-card-header">
+      <span class="table-card-title">Leaderboard</span>
+      <span class="table-card-sub" id="table-subtitle"></span>
+    </div>
+    <div class="table-wrap">
+      <table id="lb-table">
+        <thead id="lb-thead"></thead>
+        <tbody id="lb-tbody"></tbody>
+      </table>
+    </div>
+  </div>
 
-        <section>
-            <h2>Citation</h2>
-            <pre><code>@article{carbon2025,
-  title={The Carbon Cost of Generative AI for Science},
-  author={...},
-  journal={...},
-  year={2025}
-}</code></pre>
-        </section>
-    </main>
+</main>
 
-    <footer>
-        <p><strong>The Carbon Cost of Generative AI for Science</strong></p>
-        <p style="margin-top: 0.5rem;">
-            <a href="https://github.com/shuan4638/Carbon4Science">GitHub</a> ·
-            MIT License
-        </p>
-    </footer>
+<!-- ═══════════════════════════ FOOTER ══════════════════════════════ -->
+<footer>
+  <p>
+    Carbon4Science · Data updated April 2026 ·
+    <a href="https://github.com/shuan4638/Carbon4Science" target="_blank" rel="noopener">GitHub</a>
+  </p>
+</footer>
+
+<!-- ═══════════════════════════ SCRIPT ══════════════════════════════ -->
+<script>
+'use strict';
+
+/* ──────────────────────────────────────────────────────
+   CONFIGURATION
+────────────────────────────────────────────────────── */
+const TASK_CONFIG = {
+  Retro:     { majorLabel: 'Top-50 (%)', minorLabel: 'Top-10 (%)', color: '#17becf', desc: 'USPTO-50K · 5,007 reactions' },
+  Forward:   { majorLabel: 'Top-3 (%)',  minorLabel: 'Top-1 (%)',  color: '#ff7f0e', desc: 'USPTO-MIT · 40,029 reactions' },
+  MolGen:    { majorLabel: 'VUN (%)',    minorLabel: 'SUN (%)',     color: '#1f77b4', desc: 'ChEMBL 28 · 10,000 molecules' },
+  MatGen:    { majorLabel: 'mSUN (%)',   minorLabel: 'SUN (%)',     color: '#2ca02c', desc: 'MP-20 · 1,000 structures' },
+  StructOpt: { majorLabel: 'CPS',        minorLabel: null,          color: '#d62728', desc: 'LGPS · 75K steps × 3 seeds' },
+  MDSim:     { majorLabel: 'MSD',        minorLabel: null,          color: '#9467bd', desc: 'LGPS · 75K steps × 3 seeds' },
+};
+
+const ARCH_SYMBOLS = {
+  MLP:            'circle',
+  GNN:            'diamond',
+  LM:             'triangle-up',
+  LLM:            'star',
+  VAE:            'square',
+  Diffusion:      'cross',
+  'Flow Matching': 'pentagon',
+};
+
+const ARCH_COLORS = {
+  MLP:            '#6366f1',
+  GNN:            '#f59e0b',
+  LM:             '#3b82f6',
+  LLM:            '#ec4899',
+  VAE:            '#8b5cf6',
+  Diffusion:      '#ef4444',
+  'Flow Matching': '#14b8a6',
+};
+
+const ARCH_UNICODE = {
+  MLP:            '●',
+  GNN:            '◆',
+  LM:             '▲',
+  LLM:            '★',
+  VAE:            '■',
+  Diffusion:      '✕',
+  'Flow Matching': '⬠',
+};
+
+/* ──────────────────────────────────────────────────────
+   STATE
+────────────────────────────────────────────────────── */
+const state = {
+  activeTask: 'All',
+  search:     '',
+  arch:       '',
+  sortCol:    'major_metric',
+  sortDir:    -1,   // -1 = descending, 1 = ascending
+};
+
+/* ──────────────────────────────────────────────────────
+   PARETO COMPUTATION (per-task, global)
+   A row is Pareto-optimal within its task if no other
+   row in that task has strictly better metric AND
+   strictly lower (or equal) CO2, or equal metric and
+   strictly lower CO2.
+────────────────────────────────────────────────────── */
+function computeParetoSet(rows) {
+  const byTask = {};
+  rows.forEach(r => { (byTask[r.task] = byTask[r.task] || []).push(r); });
+
+  const paretoSet = new Set();
+  Object.values(byTask).forEach(group => {
+    group.forEach(r => {
+      const dominated = group.some(o =>
+        o !== r &&
+        o.major_metric >= r.major_metric &&
+        o.CO2_per_exp  <= r.CO2_per_exp  &&
+        (o.major_metric > r.major_metric || o.CO2_per_exp < r.CO2_per_exp)
+      );
+      if (!dominated) paretoSet.add(r);
+    });
+  });
+  return paretoSet;
+}
+
+const GLOBAL_PARETO = computeParetoSet(ALL_DATA);
+
+/* ──────────────────────────────────────────────────────
+   HELPERS
+────────────────────────────────────────────────────── */
+function fmtMetric(v, task) {
+  if (v === '' || v === null || v === undefined) return '—';
+  const n = Number(v);
+  if (task === 'StructOpt' || task === 'MDSim') return n.toFixed(3);
+  return n.toFixed(2);
+}
+
+function fmtTime(s) {
+  s = Number(s);
+  if (s >= 3600) return (s / 3600).toFixed(1) + 'h';
+  if (s >= 60)   return (s / 60).toFixed(1) + 'm';
+  return s.toLocaleString() + 's';
+}
+
+function fmtShort(n) {
+  n = Number(n);
+  if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+  return n.toFixed(1);
+}
+
+function hexToRgba(hex, a) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function darkenHex(hex, amt = 50) {
+  hex = hex.replace('#', '');
+  if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+  const r = Math.max(0, parseInt(hex.slice(0, 2), 16) - amt);
+  const g = Math.max(0, parseInt(hex.slice(2, 4), 16) - amt);
+  const b = Math.max(0, parseInt(hex.slice(4, 6), 16) - amt);
+  return `rgb(${r},${g},${b})`;
+}
+
+/* ──────────────────────────────────────────────────────
+   FILTERING & SORTING
+────────────────────────────────────────────────────── */
+function getFilteredData() {
+  let rows = ALL_DATA.slice();
+  if (state.activeTask !== 'All') rows = rows.filter(r => r.task === state.activeTask);
+  if (state.search.trim()) {
+    const q = state.search.trim().toLowerCase();
+    rows = rows.filter(r => r.model.toLowerCase().includes(q));
+  }
+  if (state.arch) rows = rows.filter(r => r.modelType === state.arch);
+  return rows;
+}
+
+function sortData(rows) {
+  const col = state.sortCol;
+  const dir = state.sortDir;
+  return rows.slice().sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+    if (va === '' || va === null) va = -Infinity;
+    if (vb === '' || vb === null) vb = -Infinity;
+    return va < vb ? -dir : va > vb ? dir : 0;
+  });
+}
+
+/* ──────────────────────────────────────────────────────
+   TASK TABS
+────────────────────────────────────────────────────── */
+function buildTabs() {
+  const container = document.getElementById('task-tabs');
+  const tasks = ['All', ...Object.keys(TASK_CONFIG)];
+  tasks.forEach(task => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn';
+    btn.dataset.task = task;
+    const color = task === 'All' ? '#059669' : TASK_CONFIG[task].color;
+    btn.style.setProperty('--tab-color', color);
+    if (task !== 'All') {
+      const dot = document.createElement('span');
+      dot.className = 'tab-dot';
+      dot.style.background = TASK_CONFIG[task].color;
+      btn.appendChild(dot);
+    }
+    btn.appendChild(document.createTextNode(task));
+    const cnt = document.createElement('span');
+    cnt.className = 'tab-count';
+    cnt.textContent = task === 'All' ? ALL_DATA.length : ALL_DATA.filter(r => r.task === task).length;
+    btn.appendChild(cnt);
+    btn.addEventListener('click', () => {
+      state.activeTask = task;
+      state.sortCol = 'major_metric';
+      state.sortDir = -1;
+      render();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function updateTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.task === state.activeTask);
+  });
+}
+
+/* ──────────────────────────────────────────────────────
+   TASK BANNER
+────────────────────────────────────────────────────── */
+function updateBanner() {
+  const banner = document.getElementById('task-banner');
+  if (state.activeTask === 'All') { banner.classList.remove('visible'); return; }
+  const cfg = TASK_CONFIG[state.activeTask];
+  banner.classList.add('visible');
+  document.getElementById('banner-dot').style.background    = cfg.color;
+  document.getElementById('banner-label').textContent       = state.activeTask;
+  document.getElementById('banner-desc').textContent        = cfg.desc;
+}
+
+/* ──────────────────────────────────────────────────────
+   COLUMN DEFINITIONS
+────────────────────────────────────────────────────── */
+function getColumns() {
+  const task = state.activeTask;
+  const cfg  = TASK_CONFIG[task];
+  if (task === 'All') {
+    return [
+      { key: 'rank',                   label: '#',              sort: null,            cls: 'rank' },
+      { key: 'model',                  label: 'Model',          sort: 'model',         cls: '' },
+      { key: 'year',                   label: 'Year',           sort: 'year',          cls: 'num' },
+      { key: 'venue',                  label: 'Venue',          sort: 'venue',         cls: '' },
+      { key: 'task',                   label: 'Task',           sort: 'task',          cls: '' },
+      { key: 'modelType',              label: 'Arch',           sort: 'modelType',     cls: '' },
+      { key: 'modelSize',              label: 'Size',           sort: null,            cls: '' },
+      { key: 'major_metric',           label: 'Primary Metric', sort: 'major_metric',  cls: 'num' },
+      { key: 'CO2_per_exp',            label: 'CO₂/exp (g)',    sort: 'CO2_per_exp',   cls: 'co2-cell' },
+      { key: 'inference_time_per_exp', label: 'Time/exp',       sort: 'inference_time_per_exp', cls: 'num' },
+      { key: 'pareto',                 label: 'Pareto',         sort: null,            cls: '' },
+    ];
+  }
+  const cols = [
+    { key: 'rank',                   label: '#',              sort: null,            cls: 'rank' },
+    { key: 'model',                  label: 'Model',          sort: 'model',         cls: '' },
+    { key: 'year',                   label: 'Year',           sort: 'year',          cls: 'num' },
+    { key: 'venue',                  label: 'Venue',          sort: 'venue',         cls: '' },
+    { key: 'modelType',              label: 'Arch',           sort: 'modelType',     cls: '' },
+    { key: 'modelSize',              label: 'Size',           sort: null,            cls: '' },
+    { key: 'major_metric',           label: cfg.majorLabel,   sort: 'major_metric',  cls: 'num' },
+  ];
+  if (cfg.minorLabel) {
+    cols.push({ key: 'minor_metric', label: cfg.minorLabel,  sort: 'minor_metric',  cls: 'num' });
+  }
+  cols.push(
+    { key: 'CO2_per_exp',            label: 'CO₂/exp (g)',    sort: 'CO2_per_exp',   cls: 'co2-cell' },
+    { key: 'inference_time_per_exp', label: 'Time/exp',       sort: 'inference_time_per_exp', cls: 'num' },
+    { key: 'pareto',                 label: 'Pareto',         sort: null,            cls: '' },
+  );
+  return cols;
+}
+
+/* ──────────────────────────────────────────────────────
+   RENDER TABLE
+────────────────────────────────────────────────────── */
+function renderTable(rows) {
+  const cols  = getColumns();
+  const thead = document.getElementById('lb-thead');
+  const tbody = document.getElementById('lb-tbody');
+
+  // ---- HEADER ----
+  thead.innerHTML = '';
+  const trh = document.createElement('tr');
+  cols.forEach(col => {
+    const th = document.createElement('th');
+    const sorted = col.sort && col.sort === state.sortCol;
+    th.className = [col.cls, col.sort ? '' : 'no-sort', sorted ? 'sorted' : ''].filter(Boolean).join(' ');
+    const icon = col.sort
+      ? `<i class="sort-icon">${sorted ? (state.sortDir === -1 ? '↓' : '↑') : '↕'}</i>`
+      : '';
+    th.innerHTML = col.label + icon;
+    if (col.sort) {
+      th.addEventListener('click', () => {
+        if (state.sortCol === col.sort) {
+          state.sortDir *= -1;
+        } else {
+          state.sortCol = col.sort;
+          state.sortDir = (col.sort === 'major_metric' || col.sort === 'minor_metric') ? -1 : 1;
+        }
+        render();
+      });
+    }
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+
+  // ---- BODY ----
+  tbody.innerHTML = '';
+
+  if (!rows.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="${cols.length}">
+      <div class="empty-state">
+        <div class="empty-icon">🔍</div>
+        <p>No models match your current filters.</p>
+      </div></td>`;
+    tbody.appendChild(tr);
+    document.getElementById('table-subtitle').textContent = '0 models';
+    return;
+  }
+
+  const maxCO2 = Math.max(...rows.map(r => r.CO2_per_exp));
+
+  rows.forEach((row, idx) => {
+    const isPareto = GLOBAL_PARETO.has(row);
+    const tr = document.createElement('tr');
+    if (isPareto) tr.classList.add('pareto-row');
+
+    cols.forEach(col => {
+      const td = document.createElement('td');
+
+      switch (col.key) {
+        case 'rank':
+          td.className = 'rank';
+          td.textContent = idx + 1;
+          break;
+
+        case 'model': {
+          td.className = 'model-name-cell';
+          const wrap = document.createElement('div');
+          wrap.className = 'model-cell';
+          const name = document.createElement('span');
+          name.className = 'model-name';
+          name.textContent = row.model;
+          wrap.appendChild(name);
+          if (row.baseline) {
+            const b = document.createElement('span');
+            b.className = 'badge-baseline';
+            b.textContent = 'baseline';
+            wrap.appendChild(b);
+          }
+          td.appendChild(wrap);
+          break;
+        }
+
+        case 'year':
+          td.className = 'num';
+          td.textContent = row.year;
+          break;
+
+        case 'venue':
+          td.className = 'venue-cell';
+          td.textContent = row.venue;
+          td.title = row.venue;
+          break;
+
+        case 'task': {
+          const cfg = TASK_CONFIG[row.task];
+          const pill = document.createElement('span');
+          pill.className = 'task-pill';
+          pill.style.background = hexToRgba(cfg.color, 0.13);
+          pill.style.color = darkenHex(cfg.color, 40);
+          pill.textContent = row.task;
+          td.appendChild(pill);
+          break;
+        }
+
+        case 'modelType': {
+          const pill = document.createElement('span');
+          pill.className = 'arch-pill';
+          const c = ARCH_COLORS[row.modelType] || '#64748b';
+          pill.style.background = hexToRgba(c, 0.13);
+          pill.style.color = darkenHex(c, 35);
+          pill.textContent = row.modelType;
+          td.appendChild(pill);
+          break;
+        }
+
+        case 'modelSize':
+          td.style.fontFamily = 'var(--mono)';
+          td.style.fontSize = '12px';
+          td.style.color = 'var(--text-muted)';
+          td.textContent = row.modelSize;
+          break;
+
+        case 'major_metric':
+          td.className = 'num';
+          td.textContent = fmtMetric(row.major_metric, row.task);
+          break;
+
+        case 'minor_metric':
+          td.className = 'num';
+          td.style.color = 'var(--text-muted)';
+          td.textContent = (row.minor_metric !== '' && row.minor_metric != null)
+            ? fmtMetric(row.minor_metric, row.task)
+            : '—';
+          break;
+
+        case 'CO2_per_exp': {
+          td.className = 'co2-cell';
+          const wrap = document.createElement('div');
+          wrap.className = 'co2-bar-wrap';
+          const track = document.createElement('div');
+          track.className = 'co2-bar-track';
+          const fill = document.createElement('div');
+          fill.className = 'co2-bar-fill';
+          fill.style.width = (maxCO2 > 0 ? (row.CO2_per_exp / maxCO2 * 100) : 0) + '%';
+          track.appendChild(fill);
+          const val = document.createElement('span');
+          val.className = 'co2-val';
+          val.textContent = fmtShort(row.CO2_per_exp);
+          wrap.appendChild(track);
+          wrap.appendChild(val);
+          td.appendChild(wrap);
+          break;
+        }
+
+        case 'inference_time_per_exp':
+          td.className = 'num';
+          td.style.color = 'var(--text-muted)';
+          td.textContent = fmtTime(row.inference_time_per_exp);
+          break;
+
+        case 'pareto':
+          if (isPareto) {
+            const badge = document.createElement('span');
+            badge.className = 'pareto-badge';
+            badge.innerHTML = '⚡ Pareto';
+            td.appendChild(badge);
+          }
+          break;
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('table-subtitle').textContent =
+    `${rows.length} model${rows.length !== 1 ? 's' : ''}`;
+}
+
+/* ──────────────────────────────────────────────────────
+   PARETO FRONTIER (step-line)
+   Higher Y is always better. Sort by X ascending;
+   keep only points where Y strictly improves.
+────────────────────────────────────────────────────── */
+function paretoFrontier(points) {
+  const sorted = points.slice().sort((a, b) => a.x - b.x);
+  const front = [];
+  let bestY = -Infinity;
+  sorted.forEach(p => {
+    if (p.y > bestY) { bestY = p.y; front.push(p); }
+  });
+  return front;
+}
+
+function buildStepLine(front) {
+  const lx = [], ly = [];
+  front.forEach((p, i) => {
+    lx.push(p.x); ly.push(p.y);
+    if (i < front.length - 1) { lx.push(front[i + 1].x); ly.push(p.y); }
+  });
+  return { lx, ly };
+}
+
+/* ──────────────────────────────────────────────────────
+   RENDER CHART
+────────────────────────────────────────────────────── */
+function renderChart(filteredRows) {
+  const visibleTasks = state.activeTask === 'All'
+    ? Object.keys(TASK_CONFIG)
+    : [state.activeTask];
+
+  const traces = [];
+
+  visibleTasks.forEach(task => {
+    const taskRows = filteredRows.filter(r => r.task === task);
+    if (!taskRows.length) return;
+    const cfg = TASK_CONFIG[task];
+
+    // Group by architecture for distinct marker shapes
+    const byArch = {};
+    taskRows.forEach(r => { (byArch[r.modelType] = byArch[r.modelType] || []).push(r); });
+
+    Object.entries(byArch).forEach(([arch, archRows]) => {
+      traces.push({
+        type: 'scatter',
+        mode: 'markers',
+        name: `${task} · ${arch}`,
+        legendgroup: task,
+        x: archRows.map(r => r.CO2_per_exp),
+        y: archRows.map(r => r.major_metric),
+        marker: {
+          symbol: ARCH_SYMBOLS[arch] || 'circle',
+          size:   archRows.map(r => GLOBAL_PARETO.has(r) ? 14 : 9),
+          color:  cfg.color,
+          opacity: archRows.map(r => GLOBAL_PARETO.has(r) ? 1.0 : 0.60),
+          line: {
+            color: archRows.map(r => GLOBAL_PARETO.has(r) ? darkenHex(cfg.color, 40) : cfg.color),
+            width: archRows.map(r => GLOBAL_PARETO.has(r) ? 2 : 1),
+          },
+        },
+        customdata: archRows.map(r => ({
+          model:       r.model,
+          task:        r.task,
+          arch:        r.modelType,
+          size:        r.modelSize,
+          metric:      fmtMetric(r.major_metric, r.task),
+          metricLabel: cfg.majorLabel,
+          co2:         r.CO2_per_exp,
+          time:        fmtTime(r.inference_time_per_exp),
+          pareto:      GLOBAL_PARETO.has(r),
+          baseline:    r.baseline,
+          year:        r.year,
+          venue:       r.venue,
+        })),
+        hovertemplate: [
+          '<b>%{customdata.model}</b> <i>(%{customdata.year})</i>',
+          'Task: %{customdata.task} · %{customdata.arch} · %{customdata.size}',
+          '%{customdata.metricLabel}: <b>%{customdata.metric}</b>',
+          'CO₂/exp: <b>%{x:.2f} g</b>',
+          'Time/exp: %{customdata.time}',
+          '%{customdata.venue}',
+          '<extra>%{customdata.pareto ? "⚡ Pareto-optimal" : ""}</extra>',
+        ].join('<br>'),
+        showlegend: true,
+      });
+    });
+
+    // Pareto frontier step-line
+    const frontPts = taskRows
+      .filter(r => GLOBAL_PARETO.has(r))
+      .map(r => ({ x: r.CO2_per_exp, y: r.major_metric }));
+    if (frontPts.length >= 2) {
+      const { lx, ly } = buildStepLine(paretoFrontier(frontPts));
+      traces.push({
+        type: 'scatter',
+        mode: 'lines',
+        name: `${task} frontier`,
+        legendgroup: task,
+        x: lx, y: ly,
+        line: { color: cfg.color, dash: 'dash', width: 1.5 },
+        hoverinfo: 'skip',
+        showlegend: false,
+      });
+    }
+  });
+
+  const yLabel = state.activeTask !== 'All'
+    ? TASK_CONFIG[state.activeTask].majorLabel
+    : 'Primary Metric';
+
+  const layout = {
+    xaxis: {
+      title:     { text: 'CO₂ per experiment (g)', font: { size: 12 } },
+      type:      'log',
+      showgrid:  true,
+      gridcolor: '#f1f5f9',
+      zeroline:  false,
+      tickfont:  { family: 'JetBrains Mono, monospace', size: 11 },
+      automargin: true,
+    },
+    yaxis: {
+      title:     { text: yLabel, font: { size: 12 } },
+      showgrid:  true,
+      gridcolor: '#f1f5f9',
+      zeroline:  false,
+      tickfont:  { family: 'JetBrains Mono, monospace', size: 11 },
+      automargin: true,
+    },
+    legend: {
+      orientation: 'v',
+      x: 1.01, y: 1,
+      font: { size: 11 },
+      bgcolor: 'rgba(255,255,255,.88)',
+      bordercolor: '#e2e8f0',
+      borderwidth: 1,
+      tracegroupgap: 4,
+    },
+    margin:        { t: 18, b: 50, l: 60, r: 200 },
+    plot_bgcolor:  '#ffffff',
+    paper_bgcolor: '#ffffff',
+    hovermode:     'closest',
+    hoverlabel:    { font: { family: 'Inter, sans-serif', size: 12 }, align: 'left' },
+    font:          { family: 'Inter, system-ui, sans-serif' },
+  };
+
+  const config = {
+    displayModeBar: true,
+    modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoScale2d'],
+    responsive: true,
+    toImageButtonOptions: { format: 'png', filename: 'carbon4science', scale: 2 },
+  };
+
+  Plotly.react('scatter-chart', traces, layout, config);
+}
+
+/* ──────────────────────────────────────────────────────
+   ARCHITECTURE LEGEND
+────────────────────────────────────────────────────── */
+function buildArchLegend() {
+  const el = document.getElementById('arch-legend');
+  el.innerHTML = '';
+  Object.keys(ARCH_SYMBOLS).forEach(arch => {
+    const item = document.createElement('div');
+    item.className = 'arch-legend-item';
+    const sym = document.createElement('span');
+    sym.className = 'arch-legend-sym';
+    sym.style.color = ARCH_COLORS[arch] || '#64748b';
+    sym.textContent = ARCH_UNICODE[arch] || '●';
+    item.appendChild(sym);
+    item.appendChild(document.createTextNode(arch));
+    el.appendChild(item);
+  });
+  // Pareto note
+  const note = document.createElement('div');
+  note.className = 'arch-legend-item';
+  note.style.marginLeft = '20px';
+  note.innerHTML = '<span style="color:#059669;font-size:13px">⚡</span><span>Pareto-optimal (larger marker)</span>';
+  el.appendChild(note);
+}
+
+/* ──────────────────────────────────────────────────────
+   STATS BAR
+────────────────────────────────────────────────────── */
+function updateStats(rows) {
+  const paretoCount = rows.filter(r => GLOBAL_PARETO.has(r)).length;
+  const tasks       = new Set(rows.map(r => r.task));
+  const co2s        = rows.map(r => r.CO2_per_exp);
+  const co2Min      = co2s.length ? Math.min(...co2s) : 0;
+  const co2Max      = co2s.length ? Math.max(...co2s) : 0;
+
+  document.getElementById('stat-models').textContent   = rows.length;
+  document.getElementById('stat-tasks').textContent    = tasks.size;
+  document.getElementById('stat-pareto').textContent   = paretoCount;
+  document.getElementById('stat-co2range').textContent = co2s.length
+    ? `${fmtShort(co2Min)}–${fmtShort(co2Max)}`
+    : '—';
+  document.getElementById('hdr-model-count').textContent = `${ALL_DATA.length} Models`;
+  document.getElementById('row-count-label').textContent =
+    `Showing ${rows.length} of ${ALL_DATA.length} entries`;
+}
+
+/* ──────────────────────────────────────────────────────
+   MAIN RENDER FUNCTION
+────────────────────────────────────────────────────── */
+function render() {
+  updateTabs();
+  updateBanner();
+
+  const filtered = getFilteredData();
+  const sorted   = sortData(filtered);
+
+  updateStats(filtered);
+  renderTable(sorted);
+  renderChart(filtered);
+}
+
+/* ──────────────────────────────────────────────────────
+   EVENT LISTENERS
+────────────────────────────────────────────────────── */
+document.getElementById('search-input').addEventListener('input', e => {
+  state.search = e.target.value;
+  render();
+});
+
+document.getElementById('arch-filter').addEventListener('change', e => {
+  state.arch = e.target.value;
+  render();
+});
+
+/* ──────────────────────────────────────────────────────
+   INITIALISE
+────────────────────────────────────────────────────── */
+buildTabs();
+buildArchLegend();
+render();
+</script>
 </body>
 </html>
