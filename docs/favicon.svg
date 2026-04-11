@@ -1,17 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- Hexagon ring (benzene / graphene motif) -->
-  <polygon points="16,7 24,12 24,20 16,25 8,20 8,12"
-           fill="none" stroke="#047857" stroke-width="2" stroke-linejoin="round"/>
+  <!-- Stem -->
+  <path d="M16 28 Q14 22 13 18" fill="none" stroke="#047857" stroke-width="1.8" stroke-linecap="round"/>
 
-  <!-- Inner dashed ring (double-bond effect) -->
-  <polygon points="16,10 21.5,13.5 21.5,19.5 16,23 10.5,19.5 10.5,13.5"
-           fill="none" stroke="#059669" stroke-width="1"
-           stroke-linejoin="round" stroke-dasharray="3 2" opacity="0.8"/>
+  <!-- Olive leaf -->
+  <path d="M13 18 Q6 14 8 6 Q16 4 20 10 Q22 16 13 18Z" fill="#059669"/>
 
-  <!-- Leaf sprouting from top vertex -->
-  <path d="M16 7 C19 1 24 1 22 5 C20 8 17 8 16 7Z" fill="#059669"/>
-  <path d="M16 7 C13 1 8 1 10 5 C12 8 15 8 16 7Z" fill="#059669" opacity="0.85"/>
+  <!-- Midrib vein -->
+  <path d="M13 18 Q14 12 9 7" fill="none" stroke="#047857" stroke-width="1" stroke-linecap="round" opacity="0.6"/>
 
-  <!-- Centre dot -->
-  <circle cx="16" cy="16" r="1.8" fill="#047857"/>
+  <!-- Side veins -->
+  <path d="M11 14 Q14 12 16 12" fill="none" stroke="#047857" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
+  <path d="M10 11 Q13 10 15 9" fill="none" stroke="#047857" stroke-width="0.8" stroke-linecap="round" opacity="0.5"/>
 </svg>
