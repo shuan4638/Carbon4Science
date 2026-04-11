@@ -335,6 +335,25 @@
     footer a { color: var(--accent); text-decoration: none; }
     footer a:hover { text-decoration: underline; }
 
+    /* ─── PARETO TOGGLE BUTTON ───────────────────────────── */
+    .pareto-toggle-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+      background: var(--card);
+      font-family: var(--font); font-size: 13px; font-weight: 500;
+      color: var(--text-muted); cursor: pointer;
+      transition: border-color .15s, color .15s, background .15s;
+      white-space: nowrap;
+    }
+    .pareto-toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .pareto-toggle-btn.active {
+      background: var(--accent-light); border-color: var(--accent);
+      color: var(--accent-dark); font-weight: 600;
+    }
+    .pareto-toggle-btn svg { transition: transform .2s; }
+    .pareto-toggle-btn.active svg { transform: rotate(180deg); }
+
     /* ─── RESPONSIVE ─────────────────────────────────────── */
     @media (max-width: 720px) {
       header { padding: 22px 16px 18px; }
@@ -422,8 +441,8 @@
     <span class="task-banner-desc" id="banner-desc"></span>
   </div>
 
-  <!-- Controls row -->
-  <div class="controls">
+  <!-- Controls row (hidden on All tab) -->
+  <div class="controls" id="controls-row">
     <div class="search-wrap">
       <svg class="search-icon" width="14" height="14" fill="none" stroke="currentColor"
            stroke-width="2" viewBox="0 0 24 24">
@@ -442,11 +461,17 @@
       <option value="Diffusion">Diffusion</option>
       <option value="Flow Matching">Flow Matching</option>
     </select>
+    <button class="pareto-toggle-btn" id="pareto-btn">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      Pareto Front
+    </button>
     <div class="controls-right" id="row-count-label"></div>
   </div>
 
-  <!-- Main chart (switches between reference points and Pareto scatter) -->
-  <div class="chart-card">
+  <!-- Chart (reference on All tab; Pareto scatter on task tabs via toggle) -->
+  <div class="chart-card" id="chart-card">
     <div class="chart-header">
       <span class="chart-title" id="chart-title">CO₂ Emission Reference Points</span>
       <span class="chart-hint" id="chart-hint">Log scale · Hover for details</span>
@@ -454,8 +479,8 @@
     <div id="ref-chart"></div>
   </div>
 
-  <!-- Leaderboard table -->
-  <div class="table-card">
+  <!-- Leaderboard table (hidden on All tab) -->
+  <div class="table-card" id="table-card">
     <div class="table-card-header">
       <span class="table-card-title">Leaderboard</span>
       <span class="table-card-sub" id="table-subtitle"></span>
@@ -528,11 +553,12 @@ const ARCH_UNICODE = {
    STATE
 ────────────────────────────────────────────────────── */
 const state = {
-  activeTask: 'All',
-  search:     '',
-  arch:       '',
-  sortCol:    'major_metric',
-  sortDir:    -1,   // -1 = descending, 1 = ascending
+  activeTask:  'All',
+  search:      '',
+  arch:        '',
+  sortCol:     'major_metric',
+  sortDir:     -1,   // -1 = descending, 1 = ascending
+  showPareto:  false,
 };
 
 /* ──────────────────────────────────────────────────────
@@ -654,9 +680,10 @@ function buildTabs() {
     cnt.textContent = task === 'All' ? ALL_DATA.length : ALL_DATA.filter(r => r.task === task).length;
     btn.appendChild(cnt);
     btn.addEventListener('click', () => {
-      state.activeTask = task;
-      state.sortCol = 'major_metric';
-      state.sortDir = -1;
+      state.activeTask  = task;
+      state.sortCol     = 'major_metric';
+      state.sortDir     = -1;
+      state.showPareto  = false;
       render();
     });
     container.appendChild(btn);
@@ -1269,12 +1296,23 @@ function render() {
   updateTabs();
   updateBanner();
 
+  const isAll = state.activeTask === 'All';
+
+  // Layout visibility
+  document.getElementById('controls-row').style.display = isAll ? 'none' : '';
+  document.getElementById('table-card').style.display   = isAll ? 'none' : '';
+  document.getElementById('chart-card').style.display   = (isAll || state.showPareto) ? '' : 'none';
+
+  // Pareto toggle button state
+  const paretoBtn = document.getElementById('pareto-btn');
+  paretoBtn.classList.toggle('active', state.showPareto);
+
   const filtered = getFilteredData();
   const sorted   = sortData(filtered);
 
-  updateStats(filtered);
-  renderTable(sorted);
-  renderChart();
+  updateStats(isAll ? ALL_DATA : filtered);
+  if (!isAll) renderTable(sorted);
+  if (isAll || state.showPareto) renderChart();
 }
 
 /* ──────────────────────────────────────────────────────
@@ -1287,6 +1325,11 @@ document.getElementById('search-input').addEventListener('input', e => {
 
 document.getElementById('arch-filter').addEventListener('change', e => {
   state.arch = e.target.value;
+  render();
+});
+
+document.getElementById('pareto-btn').addEventListener('click', () => {
+  state.showPareto = !state.showPareto;
   render();
 });
 
