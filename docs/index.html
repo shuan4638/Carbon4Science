@@ -1007,7 +1007,7 @@ function renderRefChart() {
       return { ...d, _barVal: rng.max, _errMinus: rng.max - rng.min, _worstModel: rng.worstModel };
     }
     return { ...d, _barVal: d.value, _errMinus: 0, _worstModel: null };
-  });
+  }).sort((a, b) => a._barVal - b._barVal);
 
   const barPx = 42;
   const chartH = Math.max(480, sorted.length * barPx + 80);

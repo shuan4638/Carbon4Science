@@ -5,13 +5,9 @@
 </p>
 
 <p align="center">
-  <a href="https://shuan4638.github.io/Carbon4Science/"><b>🌐 shuan4638.github.io/Carbon4Science</b></a><br/>
-  <em>Interactive leaderboard — explore accuracy vs. carbon cost across all tasks</em>
-</p>
-
-<p align="center">
-  <a href="https://arxiv.org/"><img src="https://img.shields.io/badge/Paper-arXiv-red.svg" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+  <a href="https://arxiv.org/"><img src="https://img.shields.io/badge/Paper-arXiv-red.svg" /></a>
+  <a href="https://shuan4638.github.io/Carbon4Science/"><img src="https://img.shields.io/badge/Website-carbon4science-green.svg" /></a>
 </p>
 
 A benchmarking framework that jointly evaluates **predictive accuracy** and **carbon footprint** of generative AI models across six scientific discovery tasks.
