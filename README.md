@@ -1,7 +1,14 @@
 # The Carbon Cost of AI for Science
 
+<p align="center">
+  <img src="docs/noah.svg" alt="Carbon4Science logo" width="120" />
+</p>
 
-
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" /></a>
+  <a href="https://arxiv.org/"><img src="https://img.shields.io/badge/Paper-arXiv-red.svg" /></a>
+  <a href="https://shuan4638.github.io/Carbon4Science/"><img src="https://img.shields.io/badge/Website-carbon4science-green.svg" /></a>
+</p>
 
 
 A benchmarking framework that jointly evaluates **predictive accuracy** and **carbon footprint** of generative AI models across six scientific discovery tasks.
