@@ -1,0 +1,55 @@
+# Retro Model Configuration
+
+neuralsym:
+  env: neuralsym
+  checkpoint: neuralsym/checkpoint/model.pth.tar
+  checkpoint_url: https://drive.google.com/drive/folders/1NUWo7Ir5bnCRMluAYf2LqAkMm-TmiQRz
+  gpu_memory_mb: 2000
+
+LocalRetro:
+  env: rdenv
+  checkpoint: LocalRetro/models/LocalRetro_USPTO_50K.pth
+  gpu_memory_mb: 4000
+
+MEGAN:
+  env: megan2
+  checkpoint: MEGAN/repo/models/uspto_50k/model_best.pt
+  gpu_memory_mb: 4000
+
+Chemformer:
+  env: chemformer
+  checkpoint: Chemformer/model/last.ckpt
+  checkpoint_url: https://az.box.com/s/7eci3nd9vy0xplqniitpk02rbg9q2zcq
+  vocabulary: Chemformer/bart_vocab_downstream.json
+  gpu_memory_mb: 6000
+
+RSMILES_1x:
+  env: rsmiles
+  checkpoint: RSMILES/r-smiles_data_and_models/USPTO_50K_PtoR.pt
+  checkpoint_url: https://drive.google.com/drive/folders/1c15h6TNU6MSNXzqB6dQVMWOs2Aae8hs6
+  augmentation_factor: 1
+  gpu_memory_mb: 4000
+
+RSMILES_20x:
+  env: rsmiles
+  checkpoint: RSMILES/r-smiles_data_and_models/USPTO_50K_PtoR.pt
+  checkpoint_url: https://drive.google.com/drive/folders/1c15h6TNU6MSNXzqB6dQVMWOs2Aae8hs6
+  augmentation_factor: 20
+  gpu_memory_mb: 4000
+
+RetroBridge:
+  env: retrobridge
+  checkpoint: RetroBridge/models/retrobridge.ckpt
+  checkpoint_url: https://zenodo.org/record/10688201/files/retrobridge.ckpt
+  gpu_memory_mb: 8000
+
+RSGPT:
+  env: gpt
+  checkpoint: RSGPT/weights/finetune_50k_aug20.pth
+  checkpoint_url: https://sandbox.zenodo.org/records/203391
+  gpu_memory_mb: 16000
+
+LlaSMol:
+  env: gpt
+  checkpoint_url: https://huggingface.co/osunlp/LlaSMol-Mistral-7B
+  gpu_memory_mb: 18000
