@@ -6,67 +6,35 @@ This guide explains how to add a new model's results to the leaderboard.
 
 ## How It Works
 
-Your branch mirrors the `Example/` folder structure. When your benchmark is complete, only two things get merged into `main`:
+Each task has its own **orphan branch** (e.g., `Retro`, `Forward`, `MolGen`). You add your model to the task branch. When your benchmark is complete, only two things get merged into `main`:
 1. Your result JSON → `results/<Task>/<model>_<N>.json`
 2. A new row in the main `README.md` leaderboard table
 
-Your model code, environments, and benchmark scripts stay on your branch.
-
----
-
-## Branch Structure
-
-**Never commit directly to `main`.** Create a personal branch:
-
-```
-<your-name>/<task>-<model>
-```
-
-Examples: `gunwook/molgen-hiervae` · `junkil/matgen-diffcsp` · `junyoung/mlip-mace`
+Your model code, environments, and benchmark scripts stay on the task branch.
 
 ---
 
 ## Step-by-Step Workflow
 
-### 1. Set up your branch
+### 1. Check out the task branch
 
 ```bash
 git clone https://github.com/shuan4638/Carbon4Science.git
 cd Carbon4Science
-git checkout main && git pull
-git checkout -b <your-name>/<task>-<model>
+git checkout Retro   # or Forward, MolGen, MatGen, MLIP
 ```
 
-### 2. Copy the Example/ template
+### 2. Add your model
 
-```bash
-cp -r Example/ <YourTask>/
-```
-
-Adapt it for your task — rename `Example` to your task name throughout `benchmarks/run_benchmark.py`, add your models to the `TASKS` dict, write `evaluate.py` for your metrics, and add your model implementations under `<YourTask>/<Model>/`.
-
-Your branch should look like:
+Create your model directory with two required files:
 
 ```
-<YourTask>/
-├── README.md                  # Your results table (see Example/README.md)
-├── evaluate.py                # Your task's metrics
-├── data/                      # Test dataset
-├── benchmarks/
-│   ├── run_benchmark.py
-│   ├── run.sh
-│   ├── slurm_benchmark.sh
-│   ├── carbon_tracker.py
-│   ├── plot_results.py
-│   └── configs/models.yaml
-├── results/
-│   ├── outputs/               # JSON result files
-│   └── figures/               # Plots
-└── <ModelA>/
-    ├── Inference.py           # Uniform run() interface
-    ├── environment.yml
-    └── CLAUDE.md
+<YourModel>/
+├── Inference.py       # Uniform run() interface (REQUIRED)
+└── environment.yml    # Conda env spec (REQUIRED)
 ```
+
+See `branch-example/ExampleTask/ExampleModel/` on `main` for a complete template.
 
 ### 3. Implement the uniform inference interface
 
@@ -85,33 +53,40 @@ def run(input_data, top_k: int = 10) -> List[Dict]:
 ### 4. Run the full benchmark with carbon tracking
 
 ```bash
-sbatch --job-name=<Model> <YourTask>/benchmarks/slurm_benchmark.sh <Model>
+# Via Slurm (recommended)
+sbatch --job-name=<Model> benchmarks/slurm_benchmark.sh <Model>
 squeue -u $USER   # check status
+
+# Or locally
+./benchmarks/run.sh --model <Model> --track_carbon --output results/<model>_<N>.json
 ```
 
 Always run the full test set. Never run long benchmarks as background processes.
 
-### 5. Open a pull request to main
+### 5. Open a pull request to the task branch
 
-Your PR should contain only:
+Your PR should contain:
 
 | File | Description |
 |------|-------------|
-| `results/<Task>/<model>_<N>.json` | Result JSON from the full benchmark run |
-| `README.md` | New row added to the appropriate leaderboard table |
-
-Your model code, environments, and benchmark scripts stay on your branch — **do not add a task folder to main**.
+| `<YourModel>/Inference.py` | Uniform `run()` interface |
+| `<YourModel>/environment.yml` | Conda env spec |
+| `results/<model>_<N>.json` | Result JSON from the full benchmark run |
 
 ```bash
-git add results/<Task>/<model>_<N>.json README.md
-git commit -m "Add <Model> results to <Task> leaderboard"
-git push -u origin <your-branch>
-gh pr create --title "Add <Model> to <Task>" --body "Top-1: X%, CO₂/exp: Yg"
+git add <YourModel>/ results/<model>_<N>.json
+git commit -m "Add <Model> to <Task>"
+git push -u origin <Task>
+gh pr create --base <Task> --title "Add <Model> to <Task>" --body "Top-1: X%, CO₂/exp: Yg"
 ```
+
+Shaun reviews and merges the result JSON to `main`.
 
 ---
 
 ## Result JSON Format
+
+See `branch-example/ExampleTask/results/examplemodel_5007.json` for the full schema.
 
 ```json
 {
@@ -133,12 +108,11 @@ gh pr create --title "Add <Model> to <Task>" --body "Top-1: X%, CO₂/exp: Yg"
 
 ---
 
-## What NOT to Commit to main
+## What NOT to Commit
 
 - Model checkpoints (`*.ckpt`, `*.pt`, `*.bin`, `*.pth`)
 - Raw prediction files (`*_predictions.json`)
 - Training datasets or large data files
-- Your task folder (`<YourTask>/`) — this stays on your branch
 
 ---
 
@@ -151,7 +125,6 @@ claude
 ```
 
 Useful prompts:
-- *"I'm [name], adding [Model] to [Task]. Set up my branch following the Example/ template."*
+- *"I'm [name], adding [Model] to [Task]. Set up my model following the branch-example/ template."*
 - *"Write the Inference.py for [Model] following the uniform interface."*
 - *"Run the full benchmark for [Model] with carbon tracking and save the result JSON."*
-- *"Add my results to the main README leaderboard table and open a PR."*
